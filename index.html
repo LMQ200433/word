@@ -133,6 +133,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .review-actions .btn{flex:1;padding:14px;font-size:0.9rem;font-weight:700;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:4px;}
 .btn-forgot{background:var(--danger);color:white;}
 .btn-know{background:var(--success);color:white;}
+.btn-know.gray{background:#b0b0b0!important;color:#fff!important;cursor:not-allowed;opacity:1!important;}
+.btn-know.gray:active{transform:none!important;}
 .btn-undo{flex:0 0 52px!important;background:#9ca3af;color:white;padding:14px 0!important;font-size:1rem!important;}
 .btn-undo:disabled{opacity:0.3;}
 .history-dots{display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;justify-content:center;min-height:14px;padding:0 8px;}
@@ -386,9 +388,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
             <div class="review-actions">
                 <button class="btn btn-undo" id="btnUndo" onclick="undoLast()" disabled title="撤销上一步">↩️</button>
                 <button class="btn btn-forgot" id="btnForgot" onclick="markForgot()" disabled>😕 忘记</button>
-                <button class="btn btn-know" id="btnKnow" onclick="markKnow()" disabled>😊 认识</button>
+                <button class="btn btn-know gray" id="btnKnow" onclick="markKnow()" disabled>😊 认识</button>
             </div>
-            <div style="margin-top:10px;font-size:0.72rem;color:var(--text-secondary);text-align:center;" id="reviewTip"></div>
+            <div id="knowHint" style="margin-top:8px;font-size:0.78rem;color:var(--success);font-weight:600;text-align:center;min-height:1.2em;"></div>
+            <div style="margin-top:6px;font-size:0.72rem;color:var(--text-secondary);text-align:center;" id="reviewTip"></div>
         </div>
 
         <div class="review-complete" id="reviewComplete">
@@ -421,18 +424,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
             <div class="chart-bars" id="chartBars"></div>
             <div style="font-size:0.7rem;color:#999;text-align:center;margin-top:8px;">每天完成的单词数量（橙色为今天）</div>
         </div>
-
         <div class="card">
             <div class="card-title"><span class="icon">📈</span> 认识率趋势</div>
             <div class="rate-bars" id="rateBars"></div>
             <div style="font-size:0.7rem;color:#999;text-align:center;margin-top:8px;">每天首次尝试的认识率（绿≥70% 橙40-70% 红&lt;40%）</div>
         </div>
-
         <div class="card">
             <div class="card-title"><span class="icon">🔥</span> 最易忘单词 TOP 10</div>
             <div id="topForgotList"></div>
         </div>
-
         <div class="card">
             <div class="card-title"><span class="icon">📈</span> 总体统计</div>
             <div class="review-summary">
@@ -457,7 +457,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
                 <div style="font-size:0.68rem;color:#aaa;margin-top:6px;">💡 用逗号分隔，最多 12 个。最后一个间隔后循环回第一个。<br>⚠️ 忘记时：回退一个阶段，明天再复习。</div>
             </div>
         </div>
-
         <div class="card">
             <div class="card-title"><span class="icon">🗑️</span> 单词管理</div>
             <div class="settings-group">
@@ -490,7 +489,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
             <div style="font-size:0.68rem;color:#aaa;margin-top:8px;" id="deleteHint"></div>
             <button class="btn btn-primary btn-sm" style="margin-top:12px;width:100%;" onclick="updateSettingsFromInputs()">保存设置</button>
         </div>
-
         <div class="card">
             <div class="card-title"><span class="icon">🔊</span> 体验</div>
             <div class="settings-group">
@@ -499,7 +497,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
             </div>
             <div style="font-size:0.68rem;color:#aaa;">认识 → 清脆高音；忘记 → 低沉提示音</div>
         </div>
-
         <div class="card">
             <div class="card-title"><span class="icon">🔥</span> 打卡系统</div>
             <div class="checkin-card">
@@ -511,12 +508,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
             </div>
             <div class="week-calendar" id="weekCalendar"></div>
         </div>
-
         <div class="card">
             <div class="card-title"><span class="icon">📝</span> 学习总结 <span style="font-size:0.7rem;color:#aaa;font-weight:400;" id="summaryTotal"></span></div>
             <div id="summaryHistory"></div>
         </div>
-
         <div class="card">
             <div class="card-title"><span class="icon">💾</span> 数据备份</div>
             <div style="font-size:0.72rem;color:#999;margin-bottom:10px;">换手机或清缓存前，先导出数据以防丢失。</div>
@@ -525,7 +520,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
                 <button class="btn btn-secondary btn-sm" style="flex:1;" onclick="openImport()">⬆️ 导入</button>
             </div>
         </div>
-
         <div class="card">
             <div class="card-title"><span class="icon">👤</span> 当前用户</div>
             <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
@@ -536,7 +530,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
                 </div>
             </div>
         </div>
-
         <div class="card">
             <div class="card-title"><span class="icon">📈</span> 统计信息</div>
             <div class="settings-group"><label>总复习次数</label><span id="statTotalReviews">0</span></div>
@@ -568,6 +561,16 @@ let currentOrder='random';
 let currentTagFilter=null;
 let reviewTagId=null;
 let statsDays=7;
+
+let reviewQueue=[];
+let initialQueueSize=0;
+let completedWordIds=new Set();
+let forgottenWordIds=new Set();
+let reviewStats={know:0,forgot:0};
+let todaySummary=[];
+let reviewSessionActive=false;
+let sessionStartGoal=0;
+let lastAction=null;
 
 function genId(){return Date.now().toString()+Math.random().toString(36).slice(2,7);}
 function getDefaultData(){
@@ -646,15 +649,14 @@ function isMastered(w){return(w.cycleCount||0)>=(appData.settings.masteredCycles
 function isArchived(w){return!!w.archived;}
 function getStreakRequired(){return appData.settings.streakRequired||3;}
 
+/* ==== 音效（修复触发问题）==== */
 let audioCtx=null;
 function ensureAudioCtx(){
     if(!audioCtx){try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){console.warn('AudioContext不可用',e);}}
-    if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();
+    if(audioCtx&&audioCtx.state==='suspended'){audioCtx.resume().catch(()=>{});}
     return audioCtx;
 }
-function playSound(type){
-    if(!appData||!appData.settings.soundEnabled)return;
-    const ctx=ensureAudioCtx();if(!ctx)return;
+function _playNow(ctx,type){
     try{
         const now=ctx.currentTime;const osc=ctx.createOscillator();const gain=ctx.createGain();
         osc.connect(gain);gain.connect(ctx.destination);
@@ -669,12 +671,25 @@ function playSound(type){
         }
     }catch(e){console.warn('播放失败',e);}
 }
+function playSound(type){
+    if(!appData||!appData.settings.soundEnabled)return;
+    const ctx=ensureAudioCtx();
+    if(!ctx)return;
+    if(ctx.state==='suspended'){
+        ctx.resume().then(()=>_playNow(ctx,type)).catch(()=>{});
+    }else{
+        _playNow(ctx,type);
+    }
+}
 function onSoundToggle(){
     const enabled=document.getElementById('settingsSound').checked;
     appData.settings.soundEnabled=enabled;saveData();
     if(enabled){ensureAudioCtx();playSound('know');}
     showToast(enabled?'🔊 音效已开启':'🔇 音效已关闭','info');
 }
+// 首次交互激活 AudioContext
+document.addEventListener('touchstart',()=>{ensureAudioCtx();},{once:true,passive:true});
+document.addEventListener('click',()=>{ensureAudioCtx();},{once:true});
 
 let toastTimer=null;
 function showToast(msg,type='info'){
@@ -689,16 +704,6 @@ let searchDebounceTimer=null;
 function debouncedRender(){clearTimeout(searchDebounceTimer);searchDebounceTimer=setTimeout(renderWordList,200);}
 function updateHeaderHeight(){const h=document.querySelector('.app-header');if(!h)return;document.documentElement.style.setProperty('--header-h',h.offsetHeight+'px');}
 window.addEventListener('resize',updateHeaderHeight);
-
-let reviewQueue=[];
-let initialQueueSize=0;
-let completedWordIds=new Set();
-let forgottenWordIds=new Set();
-let reviewStats={know:0,forgot:0};
-let todaySummary=[];
-let reviewSessionActive=false;
-let sessionStartGoal=0;
-let lastAction=null;
 
 function resetSessionState(){
     reviewQueue=[];reviewStats={know:0,forgot:0};completedWordIds=new Set();forgottenWordIds=new Set();
@@ -803,7 +808,6 @@ function switchPage(name){
     if(name==='settings'){updateSettingsPage();renderSummaryHistory();updateWeekCalendar();}
     if(name==='stats'){renderStatsPage();}
 }
-
 function renderTagFilterBar(){
     const bar=document.getElementById('tagFilterBar');
     if(!appData.tags.length){bar.innerHTML='';return;}
@@ -1102,7 +1106,6 @@ function updateMasteredDeleteSection(){
         </div>
     `).join('');
 }
-
 function setStatsDays(days,el){statsDays=days;document.querySelectorAll('.stat-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderStatsPage();}
 function renderStatsPage(){renderChartBars();renderRateBars();renderTopForgot();renderOverallStats();}
 function getLastNDays(n){const arr=[];const today=getTodayStr();for(let i=n-1;i>=0;i--){arr.push(addDays(today,-i));}return arr;}
@@ -1588,17 +1591,18 @@ function showCurrentWord(){
     const word=getWordById(entry.wordId);
     if(!word){reviewQueue.shift();showCurrentWord();return;}
     const meanings=word.meanings;
-    const isMulti=meanings.length>1;
     const activeIdxs=entry.activeMeanings||meanings.map((_,i)=>i);
+    const isCheckboxMode=activeIdxs.length>1;
     let html='';
-    if(activeIdxs.length===1){html=`<div class="single-meaning-text">${escapeHtml(meanings[activeIdxs[0]])}</div>`;}
-    else if(isMulti){
+    if(isCheckboxMode){
         html='<div class="meaning-checkboxes">'+activeIdxs.map(i=>`
             <label class="meaning-checkbox-item" onclick="toggleMeaning(this,event);">
                 <input type="checkbox" class="meaning-checkbox" data-idx="${i}">
                 <span>${escapeHtml(meanings[i])}</span>
             </label>`).join('')+'</div>';
-    }else{html=`<div class="single-meaning-text">${escapeHtml(meanings[0]||'')}</div>`;}
+    }else{
+        html=`<div class="single-meaning-text">${escapeHtml(meanings[activeIdxs[0]]||'')}</div>`;
+    }
     document.getElementById('reviewMeaning').innerHTML=html;
     document.getElementById('reviewWord').textContent=word.word;
     document.getElementById('mnemonicInput').value=word.mnemonic||'';
@@ -1614,11 +1618,9 @@ function showCurrentWord(){
     const tip=document.getElementById('reviewTip');
     const intervals=getIntervals();const streakReq=getStreakRequired();
     if(entry.forgot){tip.textContent=`⚠️ 已标记忘记，需连续 ${streakReq} 次「认识」（当前 ${entry.streak}/${streakReq}）`;}
-    else if(activeIdxs.length===1&&isMulti){tip.textContent='💡 只剩 1 个释义，无方框，直接判断';}
-    else if(isMulti){tip.textContent='💡 勾选你记住的释义，未全部勾选会再次出现';}
+    else if(isCheckboxMode){tip.textContent='💡 勾选你记住的释义，未勾选的会再出现';}
     else{const cycleInfo=(word.cycleCount||0)>0?`（第${(word.cycleCount||0)+1}轮）`:'';tip.textContent=`当前阶段 ${word.stage}/${intervals.length} ${cycleInfo}`;}
-    document.getElementById('btnKnow').disabled=true;
-    document.getElementById('btnForgot').disabled=true;
+    updateButtons();
     updateUndoButton();
 }
 function toggleMeaning(el,e){
@@ -1627,6 +1629,40 @@ function toggleMeaning(el,e){
     if(!cb)return;
     cb.checked=!cb.checked;
     el.classList.toggle('checked',cb.checked);
+    updateButtons();
+}
+function updateButtons(){
+    const entry=reviewQueue[0];if(!entry)return;
+    const word=getWordById(entry.wordId);if(!word)return;
+    const meanings=word.meanings;
+    const activeIdxs=entry.activeMeanings||meanings.map((_,i)=>i);
+    const isCheckboxMode=activeIdxs.length>1;
+    const btnKnow=document.getElementById('btnKnow');
+    const btnForgot=document.getElementById('btnForgot');
+    const hint=document.getElementById('knowHint');
+    const card=document.getElementById('reviewCard');
+    const revealed=card.classList.contains('revealed');
+    if(isCheckboxMode){
+        const boxes=document.getElementById('reviewMeaning').querySelectorAll('.meaning-checkbox');
+        let checkedCount=0;
+        boxes.forEach(cb=>{if(cb.checked)checkedCount++;});
+        btnForgot.style.display='none';
+        if(!revealed||checkedCount===0){
+            btnKnow.disabled=true;
+            btnKnow.classList.add('gray');
+            hint.textContent=revealed?'请勾选你记住的释义':'点击卡片查看释义';
+        }else{
+            btnKnow.disabled=false;
+            btnKnow.classList.remove('gray');
+            hint.textContent=`已勾选 ${checkedCount} 个释义`;
+        }
+    }else{
+        btnKnow.disabled=!revealed;
+        btnKnow.classList.remove('gray');
+        btnForgot.style.display='flex';
+        btnForgot.disabled=!revealed;
+        hint.textContent='';
+    }
 }
 function renderHistoryDots(word){
     const dots=document.getElementById('historyDots');const legend=document.getElementById('historyLegend');
@@ -1642,8 +1678,7 @@ function revealCard(){
     card.classList.add('revealed');
     const word=getWordById(reviewQueue[0].wordId);
     if(word&&word.mnemonic&&word.mnemonic.trim())document.getElementById('reviewMnemonic').classList.add('show');
-    document.getElementById('btnKnow').disabled=false;
-    document.getElementById('btnForgot').disabled=false;
+    updateButtons();
 }
 let mnemonicSaveTimer=null;
 function saveMnemonicDebounced(){
@@ -1736,6 +1771,12 @@ function markKnow(){
 }
 function markForgot(){
     if(!reviewQueue.length)return;
+    const entry0=reviewQueue[0];
+    const word0=getWordById(entry0.wordId);
+    if(word0){
+        const activeIdxs0=entry0.activeMeanings||word0.meanings.map((_,i)=>i);
+        if(activeIdxs0.length>1)return;
+    }
     takeSnapshot();
     const entry=reviewQueue[0];const word=getWordById(entry.wordId);
     if(!word){reviewQueue.shift();showCurrentWord();return;}
@@ -1947,7 +1988,7 @@ document.addEventListener('keydown',e=>{
     if(tag==='INPUT'||tag==='TEXTAREA')return;
     if(e.key===' '||e.key==='Enter'){e.preventDefault();const card=document.getElementById('reviewCard');if(!card.classList.contains('revealed'))revealCard();}
     else if(e.key==='1'||e.key==='k'||e.key==='K'){e.preventDefault();if(!document.getElementById('btnKnow').disabled)markKnow();}
-    else if(e.key==='2'||e.key==='f'||e.key==='F'){e.preventDefault();if(!document.getElementById('btnForgot').disabled)markForgot();}
+    else if(e.key==='2'||e.key==='f'||e.key==='F'){e.preventDefault();const bf=document.getElementById('btnForgot');if(!bf.disabled&&bf.style.display!=='none')markForgot();}
     else if(e.key==='z'||e.key==='Z'){e.preventDefault();if(!document.getElementById('btnUndo').disabled)undoLast();}
 });
 document.getElementById('inputMeaning').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addWord();}});
