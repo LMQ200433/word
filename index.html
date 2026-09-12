@@ -6,16 +6,25 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>记忆单词 · 艾宾浩斯</title>
 <style>
-:root{--primary:#5B6ABF;--primary-dark:#4A56A8;--primary-light:#E8EBF7;--success:#4CAF50;--success-light:#E8F5E9;--danger:#F44336;--danger-light:#FFEBEE;--warning:#FF9800;--warning-light:#FFF3E0;--text:#1A1A2E;--text-secondary:#6B7280;--bg:#F5F6FA;--card-bg:#FFFFFF;--shadow:0 8px 25px rgba(0,0,0,0.06);--radius:20px;--radius-sm:12px;--transition:all 0.25s cubic-bezier(0.4,0,0.2,1);--font:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);}
+:root{--primary:#5B6ABF;--primary-dark:#4A56A8;--primary-light:#E8EBF7;--success:#4CAF50;--success-light:#E8F5E9;--danger:#F44336;--danger-light:#FFEBEE;--warning:#FF9800;--warning-light:#FFF3E0;--text:#1A1A2E;--text-secondary:#6B7280;--bg:#F5F6FA;--card-bg:#FFFFFF;--shadow:0 8px 25px rgba(0,0,0,0.06);--radius:20px;--radius-sm:12px;--transition:all 0.25s cubic-bezier(0.4,0,0.2,1);--font:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--header-h:62px;}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding-top:calc(62px + var(--safe-top));padding-bottom:calc(20px + var(--safe-bottom));user-select:none;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding-top:calc(var(--header-h) + var(--safe-top));padding-bottom:calc(20px + var(--safe-bottom));user-select:none;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none;}
+/* #17: 允许选择单词/释义文本 */
+.review-card .word-display,
+.single-meaning-text,
+.ds-word,
+.ds-meaning,
+.word-info .word-en,
+.word-info .word-zh,
+.meaning-checkbox-item span{user-select:text;-webkit-user-select:text;}
 .app-header{background:linear-gradient(145deg,#5B6ABF 0%,#7B5BBF 50%,#9B4BBF 100%);color:white;padding:12px 16px;position:fixed;top:0;left:0;right:0;z-index:1000;box-shadow:0 4px 20px rgba(91,106,191,0.3);padding-top:calc(12px + var(--safe-top));}
-.header-inner{max-width:500px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.header-inner{max-width:500px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
 .header-inner h1{font-size:1.2rem;font-weight:700;display:flex;align-items:center;gap:6px;}
 .header-inner h1 .logo-icon{font-size:1.5rem;}
 .header-stats{display:flex;gap:6px;font-size:0.7rem;flex-wrap:wrap;}
 .header-stats span{display:flex;align-items:center;gap:3px;background:rgba(255,255,255,0.22);padding:3px 9px;border-radius:20px;backdrop-filter:blur(10px);font-weight:500;}
-.nav-tabs{display:flex;max-width:500px;margin:0 auto;padding:10px 12px 0;gap:6px;position:sticky;top:calc(64px + var(--safe-top));z-index:999;background:var(--bg);}
+/* #18: nav-tabs 用 CSS 变量 */
+.nav-tabs{display:flex;max-width:500px;margin:0 auto;padding:10px 12px 0;gap:6px;position:sticky;top:calc(var(--header-h) + var(--safe-top));z-index:999;background:var(--bg);}
 .nav-tab{flex:1;padding:10px 6px;text-align:center;border:none;background:var(--card-bg);border-radius:14px 14px 0 0;cursor:pointer;font-size:0.76rem;font-weight:600;color:var(--text-secondary);transition:var(--transition);position:relative;font-family:var(--font);box-shadow:0 -2px 10px rgba(0,0,0,0.02);}
 .nav-tab.active{color:var(--primary);background:var(--card-bg);box-shadow:0 -4px 15px rgba(0,0,0,0.06);font-weight:700;}
 .nav-tab.active::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:28px;height:3px;background:var(--primary);border-radius:3px 3px 0 0;}
@@ -458,22 +467,22 @@ function saveUsersList(list){localStorage.setItem(USERS_LIST_KEY,JSON.stringify(
 function addUserToList(name){const list=getUsersList();if(!list.includes(name)){list.push(name);saveUsersList(list);}}
 function removeUserFromList(name){saveUsersList(getUsersList().filter(u=>u!==name));}
 
-/* 修复 #2 #3：补全 id/word/meaning 兜底 */
+/* 修复 #3 #4：补全 id/word/meaning/stage 范围/meanings 空串过滤 */
 function normalizeWord(w){
     if(!w||typeof w!=='object')w={};
-    // 补 id
     if(!w.id||typeof w.id!=='string')w.id=Date.now().toString()+Math.random().toString(36).slice(2,7);
-    // 补 word / meaning
     if(typeof w.word!=='string')w.word='';
     if(typeof w.meaning!=='string')w.meaning='';
     if(!w.meanings||!Array.isArray(w.meanings)||!w.meanings.length){
         w.meanings=(w.meaning||'').split(/[;；]/).map(s=>String(s).trim()).filter(s=>s);
     }
     if(!w.meanings.length&&w.meaning)w.meanings=[w.meaning];
-    if(!w.meanings.length)w.meanings=[''];
-    // 补数值字段
+    // #4: 过滤空串并保证至少一项
+    w.meanings=w.meanings.map(s=>String(s||'').trim()).filter(s=>s);
+    if(!w.meanings.length)w.meanings=[w.meaning||'（无释义）'];
+    // #3: stage 范围检查
+    if(typeof w.stage!=='number'||w.stage<0||w.stage>MAX_INTERVALS)w.stage=0;
     if(typeof w.cycleCount!=='number')w.cycleCount=0;
-    if(typeof w.stage!=='number')w.stage=0;
     if(typeof w.totalReviews!=='number')w.totalReviews=0;
     if(typeof w.correctReviews!=='number')w.correctReviews=0;
     if(typeof w.wrongReviews!=='number')w.wrongReviews=0;
@@ -533,6 +542,15 @@ function debouncedRender(){
     searchDebounceTimer=setTimeout(renderWordList,200);
 }
 
+/* ========== #18: header 高度自适应 ========== */
+function updateHeaderHeight(){
+    const h=document.querySelector('.app-header');
+    if(!h)return;
+    const height=h.offsetHeight;
+    document.documentElement.style.setProperty('--header-h',height+'px');
+}
+window.addEventListener('resize',updateHeaderHeight);
+
 /* ========== 会话状态重置 ========== */
 function resetSessionState(){
     reviewQueue=[];
@@ -558,7 +576,6 @@ function resetSessionState(){
     if(pt)pt.textContent='0/0';
 }
 
-/* ========== 顺序偏好加载 ========== */
 function loadUserOrderPreference(){
     if(!currentUser){currentOrder='random';return;}
     const savedOrder=localStorage.getItem('ebbinghaus_order_'+currentUser);
@@ -569,7 +586,6 @@ function loadUserOrderPreference(){
     });
 }
 
-/* 修复 #7：切换用户重置筛选/排序 */
 function resetFilterSort(){
     currentFilter='all';
     currentSort='next';
@@ -591,6 +607,7 @@ function bootstrap(){
     resetFilterSort();
     renderAll();
     loadUserOrderPreference();
+    updateHeaderHeight();
 }
 function openUserModal(){document.getElementById('userModal').style.display='flex';renderUserList();document.getElementById('usernameInput').value='';setTimeout(()=>document.getElementById('usernameInput').focus(),100);}
 function renderUserList(){
@@ -616,7 +633,9 @@ function selectUser(name){
     currentUser=name;appData=loadData(name);
     loadUserOrderPreference();
     document.getElementById('userModal').style.display='none';
-    renderAll();showToast(`欢迎回来，${name}！`,'success');
+    renderAll();
+    updateHeaderHeight();
+    showToast(`欢迎回来，${name}！`,'success');
 }
 function confirmUsername(){
     const name=document.getElementById('usernameInput').value.trim();
@@ -630,19 +649,31 @@ function confirmUsername(){
     loadUserOrderPreference();
     document.getElementById('userModal').style.display='none';
     renderAll();
+    updateHeaderHeight();
 }
 document.getElementById('usernameInput').addEventListener('keydown',e=>{if(e.key==='Enter')confirmUsername();});
 function openSwitchUser(){
     if(reviewSessionActive){if(!confirm('正在背诵中，切换用户会丢失当前会话进度。确定切换吗？'))return;}
     openUserModal();
 }
+/* 修复 #5：删除用户时清理所有相关 key（主数据 + session + 备份） */
 function deleteCurrentUser(){
     if(!currentUser)return;
     if(!confirm(`确定删除用户「${currentUser}」吗？所有单词和学习记录将永久丢失！`))return;
     const input=prompt('请输入用户名以确认删除：');
     if(input!==currentUser){showToast('用户名不匹配，已取消','error');return;}
-    localStorage.removeItem(STORAGE_PREFIX+currentUser);
-    localStorage.removeItem(SESSION_KEY_PREFIX+currentUser);
+    const bkPrefix=STORAGE_PREFIX+currentUser+'_backup_';
+    const toRemove=[];
+    for(let i=0;i<localStorage.length;i++){
+        const k=localStorage.key(i);
+        if(!k)continue;
+        if(k===STORAGE_PREFIX+currentUser||
+           k===SESSION_KEY_PREFIX+currentUser||
+           k.startsWith(bkPrefix)){
+            toRemove.push(k);
+        }
+    }
+    toRemove.forEach(k=>localStorage.removeItem(k));
     removeUserFromList(currentUser);
     localStorage.removeItem(CURRENT_USER_KEY);
     location.reload();
@@ -839,7 +870,7 @@ function showWordDetail(id){
             <div style="background:#f8f8f8;border-radius:10px;padding:10px;margin-top:8px;">
                 <div style="font-size:0.72rem;color:#666;line-height:1.8;">
                     状态：<b>${getStageLabel(w)}</b><br>
-                    当前阶段：${w.stage} / ${intervals.length}<br>
+                    当前阶段：${Math.min(w.stage,intervals.length)} / ${intervals.length}<br>
                     已完成循环：${w.cycleCount||0} / ${masteredCycles}<br>
                     下次复习：${w.nextReviewDate||'—'}<br>
                     上次复习：${w.lastReviewed||'—'}<br>
@@ -909,7 +940,7 @@ function renderSummaryHistory(){
         const isToday=date===getTodayStr();
         return`<details class="summary-day" ${isToday?'open':''}>
             <summary>
-                <span class="day-date">${date}${isToday?' · 今天':''}</span>
+                <span class="day-date">${escapeHtml(date)}${isToday?' · 今天':''}</span>
                 <span class="day-count">${items.length} 个</span>
                 ${forgotCount?`<span class="day-warn">⚠️ ${forgotCount} 需加强</span>`:''}
             </summary>
@@ -1024,8 +1055,10 @@ function onAutoDeleteToggle(){
         const toDelete=appData.words.filter(w=>(w.cycleCount||0)>=threshold);
         if(toDelete.length>0){
             if(confirm(`已有 ${toDelete.length} 个单词完成了 ${threshold} 个循环，是否立即删除？`)){
-                const ids=toDelete.map(w=>w.id);
-                ids.forEach(id=>deleteWordSilently(id));
+                // 修复 #12：批量删除只写一次 localStorage
+                const idSet=new Set(toDelete.map(w=>w.id));
+                appData.words=appData.words.filter(w=>!idSet.has(w.id));
+                saveData();
                 refreshAfterDelete();
                 showToast(`已删除 ${toDelete.length} 个单词`,'info');
             }
@@ -1064,7 +1097,7 @@ function setInputIfNotFocused(id,value){
     const el=document.getElementById(id);
     if(el&&document.activeElement!==el)el.value=value;
 }
-/* 修复 #6：降低 masteredCycles 时清 nextReviewDate */
+/* 修复 #2：双向调整 masteredCycles */
 function updateSettingsFromInputs(){
     const g=parseInt(document.getElementById('settingsDailyGoal').value);
     const t=parseInt(document.getElementById('settingsDeleteThreshold').value);
@@ -1079,9 +1112,15 @@ function updateSettingsFromInputs(){
     if(!isNaN(mc)&&mc>=1&&mc<=10){
         appData.settings.masteredCycles=mc;
         appData.words.forEach(w=>{
-            if((w.cycleCount||0)>=mc){
+            const c=w.cycleCount||0;
+            if(c>=mc){
+                // 满足掌握条件
                 if(!w.masteredDate)w.masteredDate=w.lastReviewed||getTodayStr();
-                w.nextReviewDate=null; // 已掌握，不再安排复习
+                w.nextReviewDate=null;
+            }else if(w.masteredDate){
+                // 不再满足掌握条件 → 重新激活
+                w.masteredDate=null;
+                if(!w.nextReviewDate)w.nextReviewDate=getTodayStr();
             }
         });
     }
@@ -1167,11 +1206,14 @@ function safeImportData(raw){
     }
     return result;
 }
+/* 修复 #6：备份在 confirm 之后 */
 function applyImportedData(text){
     try{
         const parsed=JSON.parse(text);
         const data=parsed.data||parsed;
         if(!data.words||!Array.isArray(data.words))throw new Error('数据格式错误，缺少 words 数组');
+        if(!confirm(`即将导入 ${data.words.length} 个单词，覆盖当前用户数据。确定继续？`))return;
+        // 用户确认后再清理旧备份、创建新备份
         try{
             const prefix=STORAGE_PREFIX+currentUser+'_backup_';
             const toRemove=[];
@@ -1182,7 +1224,6 @@ function applyImportedData(text){
             toRemove.forEach(k=>localStorage.removeItem(k));
             localStorage.setItem(prefix+Date.now(),JSON.stringify(appData));
         }catch(e){console.warn('备份失败',e);}
-        if(!confirm(`即将导入 ${data.words.length} 个单词，覆盖当前用户数据。确定继续？`))return;
         appData=safeImportData(data);
         saveData();
         closeModal();
@@ -1259,13 +1300,18 @@ function discardSession(){
     updateReviewOverview();
     showToast('已放弃会话','info');
 }
+/* 修复 #1：due/new 去重 */
 function updateReviewOverview(){
     const today=getTodayStr();
     const goal=appData.settings.dailyGoal||20;
     const intervals=getIntervals();
     document.getElementById('dailyGoalInput').value=goal;
     const due=appData.words.filter(w=>!isMastered(w)&&w.nextReviewDate&&w.nextReviewDate<=today&&w.stage<intervals.length);
-    const newCandidates=appData.words.filter(w=>!isMastered(w)&&w.stage===0&&(!w.lastReviewed||!w.nextReviewDate||w.nextReviewDate<=today));
+    const dueIds=new Set(due.map(w=>w.id));
+    const newCandidates=appData.words.filter(w=>
+        !isMastered(w)&&w.stage===0&&!dueIds.has(w.id)&&
+        (!w.lastReviewed||!w.nextReviewDate||w.nextReviewDate<=today)
+    );
     const dueCount=due.length;
     const needed=Math.max(0,goal-dueCount);
     const newToAdd=Math.min(needed,newCandidates.length);
@@ -1284,12 +1330,18 @@ function updateReviewOverview(){
     }
     updateHeaderStats();
 }
+/* 修复 #1：startReview 也从 shuffled 里剔除 dueIds；加防重入 */
 function startReview(extraCount){
+    if(reviewSessionActive)return;
     const today=getTodayStr();
     const goal=extraCount||appData.settings.dailyGoal||20;
     const intervals=getIntervals();
     const due=appData.words.filter(w=>!isMastered(w)&&w.nextReviewDate&&w.nextReviewDate<=today&&w.stage<intervals.length);
-    const newCandidates=appData.words.filter(w=>!isMastered(w)&&w.stage===0&&(!w.lastReviewed||!w.nextReviewDate||w.nextReviewDate<=today));
+    const dueIds=new Set(due.map(w=>w.id));
+    const newCandidates=appData.words.filter(w=>
+        !isMastered(w)&&w.stage===0&&!dueIds.has(w.id)&&
+        (!w.lastReviewed||!w.nextReviewDate||w.nextReviewDate<=today)
+    );
     const needed=Math.max(0,goal-due.length);
     let picked;
     if(extraCount){
@@ -1298,10 +1350,8 @@ function startReview(extraCount){
         picked=shuffledPool.slice(0,extraCount);
     }else{
         const shuffled=[...newCandidates].sort(()=>Math.random()-0.5);
-        const seen=new Set();
-        picked=[];
-        [...due,...shuffled].forEach(w=>{if(!seen.has(w.id)){seen.add(w.id);picked.push(w);}});
-        picked=picked.slice(0,goal);
+        // due 与 newCandidates 已互斥，无需再 Set 去重
+        picked=[...due,...shuffled].slice(0,goal);
     }
     if(!picked.length){showToast('没有可背诵的单词','error');return;}
     let ordered;
@@ -1416,7 +1466,7 @@ function addHistory(word,result){
     word.history.push({d:getTodayStr(),r:result});
     if(word.history.length>50)word.history=word.history.slice(-50);
 }
-/* 修复 #7：多释义重排 push 到队尾，避免紧追 */
+/* 修复 #10：限定 checkbox 查询范围 */
 function markKnow(){
     if(!reviewQueue.length)return;
     const entry=reviewQueue[0];
@@ -1432,14 +1482,14 @@ function markKnow(){
     const isMulti=meanings.length>1;
     const activeIdxs=entry.activeMeanings||meanings.map((_,i)=>i);
     if(isMulti&&activeIdxs.length>1){
-        const boxes=document.querySelectorAll('.meaning-checkbox');
+        const boxes=document.getElementById('reviewMeaning').querySelectorAll('.meaning-checkbox');
         const checked=new Set();
         boxes.forEach(cb=>{if(cb.checked)checked.add(parseInt(cb.dataset.idx));});
         const unchecked=activeIdxs.filter(i=>!checked.has(i));
         if(unchecked.length>0){
             entry.activeMeanings=unchecked;
             reviewQueue.shift();
-            reviewQueue.push(entry); // 修复：推入队尾
+            reviewQueue.push(entry);
             saveData();saveSession();
             showCurrentWord();
             if(unchecked.length===1)showToast(`还剩 1 个释义：${meanings[unchecked[0]]}`,'info');
@@ -1461,7 +1511,7 @@ function markKnow(){
     }else{
         reviewQueue.shift();
         entry.activeMeanings=null;
-        reviewQueue.push(entry); // 修复：推入队尾
+        reviewQueue.push(entry);
         saveData();saveSession();
         showCurrentWord();
     }
@@ -1477,7 +1527,6 @@ function markForgot(){
     appData.stats.totalReviews=(appData.stats.totalReviews||0)+1;
     appData.stats.totalForgot=(appData.stats.totalForgot||0)+1;
     word.wrongReviews=(word.wrongReviews||0)+1;
-    // 修复 #4：认识率口径 —— "曾忘记"用 Set 去重
     if(!forgottenWordIds.has(word.id)){
         forgottenWordIds.add(word.id);
         reviewStats.forgot=forgottenWordIds.size;
@@ -1488,18 +1537,17 @@ function markForgot(){
     entry.activeMeanings=null;
     const oldStage=word.stage;
     regressWord(word);
-    // 修复 #5：提示文案
     let regressMsg;
     if(word.stage===0&&oldStage>0)regressMsg='已重置到第 1 天，明天继续';
     else if(word.stage===oldStage)regressMsg='已在第 1 阶段，明天继续';
     else regressMsg='已回退一级，明天继续';
     showToast('😕 忘记 · '+regressMsg,'info');
     reviewQueue.shift();
-    reviewQueue.push(entry); // 修复：推入队尾
+    reviewQueue.push(entry);
     saveData();saveSession();
     showCurrentWord();
 }
-/* 修复 #1：advanceWord 让最后一个间隔真正生效 */
+/* advanceWord */
 function advanceWord(word){
     const today=getTodayStr();
     const intervals=getIntervals();
@@ -1513,33 +1561,26 @@ function advanceWord(word){
     }
 
     if(word.stage<totalStages){
-        // 用 intervals[stage] 安排下次复习，stage 前进
         word.nextReviewDate=addDays(today,intervals[word.stage]);
         word.stage+=1;
-
-        // 检查是否完成本轮所有间隔
         if(word.stage>=totalStages){
             word.cycleCount=(word.cycleCount||0)+1;
             word.stage=0;
-
             if(word.cycleCount>=masteredCycles){
-                // 完成足够循环，标记掌握
                 word.masteredDate=today;
                 word.nextReviewDate=null;
             }
-            // 否则保留上面安排的 intervals[totalStages-1] 天后的复习
-            // 这就是最后一轮的长间隔，用户会在那一天重新看到这个词，
-            // 从而开始新一轮的循环
         }
     }
-
     word.lastReviewed=today;
-
     if(appData.settings.autoDeleteEnabled){
         const threshold=appData.settings.autoDeleteCycles||3;
         if((word.cycleCount||0)>=threshold){
             const wName=word.word,wCycles=word.cycleCount,wId=word.id;
+            // 修复 #7：跨用户检查
+            const userAtSchedule=currentUser;
             setTimeout(()=>{
+                if(currentUser!==userAtSchedule)return;
                 deleteWordSilently(wId);
                 renderWordList();updateHeaderStats();updateLibraryStats();updateMasteredDeleteSection();
                 showToast(`📚 「${wName}」已完成 ${wCycles} 个循环，自动移出单词本`,'info');
@@ -1547,7 +1588,6 @@ function advanceWord(word){
         }
     }
 }
-/* 修复 #5：忘记后统一回退一格，明天再复习 */
 function regressWord(word){
     const today=getTodayStr();
     if(word.stage>0)word.stage=Math.max(0,word.stage-1);
@@ -1570,6 +1610,7 @@ function renderDailySummary(){
             ${s.forgotten?'<div class="ds-focus">⚠️ 需加强记忆</div>':''}
         </div>`).join('');
 }
+/* 修复 #14：同日总结去重 */
 function finishReview(){
     reviewSessionActive=false;
     clearSession();
@@ -1590,7 +1631,11 @@ function finishReview(){
     document.getElementById('progressBar').style.width='100%';
     const today=getTodayStr();
     if(!appData.summaries)appData.summaries={};
-    appData.summaries[today]=(appData.summaries[today]||[]).concat(todaySummary);
+    // 按 word 去重合并
+    const existing=appData.summaries[today]||[];
+    const seen=new Set(existing.map(s=>s.word));
+    const merged=existing.concat(todaySummary.filter(s=>!seen.has(s.word)));
+    appData.summaries[today]=merged;
     const cutoff=addDays(today,-SUMMARY_KEEP_DAYS);
     Object.keys(appData.summaries).forEach(d=>{if(d<cutoff)delete appData.summaries[d];});
     saveData();
@@ -1610,7 +1655,6 @@ function confirmComplete(){
     document.querySelectorAll('#page-review .card').forEach(c=>c.style.display='block');
     document.getElementById('progressBar').style.width='0%';
     document.getElementById('progressText').textContent='0/0';
-    // 清理所有会话变量
     reviewQueue=[];
     reviewStats={know:0,forgot:0};
     completedWordIds=new Set();
