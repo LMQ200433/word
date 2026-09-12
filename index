@@ -1,0 +1,1837 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <title>记忆单词 - 艾宾浩斯遗忘曲线 · 打卡版</title>
+    <style>
+        :root {
+            --primary: #5B6ABF;
+            --primary-dark: #4A56A8;
+            --primary-light: #E8EBF7;
+            --success: #4CAF50;
+            --success-light: #E8F5E9;
+            --danger: #F44336;
+            --danger-light: #FFEBEE;
+            --warning: #FF9800;
+            --warning-light: #FFF3E0;
+            --text: #1A1A2E;
+            --text-secondary: #6B7280;
+            --bg: #F5F6FA;
+            --card-bg: #FFFFFF;
+            --shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+            --shadow-hover: 0 12px 35px rgba(0, 0, 0, 0.12);
+            --radius: 20px;
+            --radius-sm: 12px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding-top: calc(60px + var(--safe-top));
+            padding-bottom: calc(20px + var(--safe-bottom));
+            user-select: none;
+            -webkit-font-smoothing: antialiased;
+            overscroll-behavior-y: none;
+        }
+
+        /* iPhone 14 Pro 特定优化 */
+        @supports (padding: max(0px)) {
+            body {
+                padding-left: max(16px, env(safe-area-inset-left));
+                padding-right: max(16px, env(safe-area-inset-right));
+            }
+        }
+
+        /* Header */
+        .app-header {
+            background: linear-gradient(145deg, #5B6ABF 0%, #7B5BBF 50%, #9B4BBF 100%);
+            color: white;
+            padding: 12px 16px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 4px 20px rgba(91, 106, 191, 0.3);
+            padding-top: calc(12px + var(--safe-top));
+        }
+        .app-header .header-inner {
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .app-header h1 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .app-header h1 .logo-icon {
+            font-size: 1.8rem;
+        }
+        .header-stats {
+            display: flex;
+            gap: 8px;
+            font-size: 0.75rem;
+            opacity: 0.95;
+            flex-wrap: wrap;
+        }
+        .header-stats span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.22);
+            padding: 4px 10px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            font-weight: 500;
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 0 16px;
+            gap: 6px;
+            margin-top: -1px;
+            position: sticky;
+            top: calc(68px + var(--safe-top));
+            z-index: 999;
+            background: var(--bg);
+            padding-top: 10px;
+            padding-bottom: 6px;
+        }
+        .nav-tab {
+            flex: 1;
+            padding: 10px 8px;
+            text-align: center;
+            border: none;
+            background: var(--card-bg);
+            border-radius: 14px 14px 0 0;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: var(--transition);
+            position: relative;
+            font-family: var(--font);
+            letter-spacing: 0.3px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.02);
+        }
+        .nav-tab:hover {
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+        .nav-tab.active {
+            color: var(--primary);
+            background: var(--card-bg);
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.06);
+            font-weight: 700;
+        }
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 3px 3px 0 0;
+        }
+        .nav-tab .tab-badge {
+            display: inline-block;
+            background: var(--danger);
+            color: white;
+            border-radius: 12px;
+            padding: 1px 6px;
+            font-size: 0.65rem;
+            margin-left: 4px;
+            font-weight: 700;
+            min-width: 18px;
+            text-align: center;
+        }
+        .nav-tab .tab-badge.review-badge {
+            background: var(--warning);
+        }
+        .nav-tab .tab-badge.checkin-badge {
+            background: var(--success);
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 12px 12px 30px;
+        }
+        .page {
+            display: none;
+            animation: fadeIn 0.25s ease;
+        }
+        .page.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Card */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px;
+            margin-bottom: 14px;
+            transition: var(--transition);
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+        .card:hover {
+            box-shadow: var(--shadow-hover);
+        }
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text);
+        }
+        .card-title .icon {
+            font-size: 1.1rem;
+        }
+
+        /* Add Word Form */
+        .add-word-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(145deg, var(--primary), #7B5BBF);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            letter-spacing: 0.3px;
+            font-family: var(--font);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: 0 4px 15px rgba(91, 106, 191, 0.25);
+        }
+        .add-word-btn:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 8px rgba(91, 106, 191, 0.3);
+        }
+        .add-form {
+            margin-top: 12px;
+            padding: 14px;
+            background: var(--primary-light);
+            border-radius: var(--radius-sm);
+            display: none;
+            animation: slideDown 0.25s ease;
+        }
+        .add-form.show {
+            display: block;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--text-secondary);
+        }
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-family: var(--font);
+            transition: var(--transition);
+            outline: none;
+            background: white;
+            color: var(--text);
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(91, 106, 191, 0.12);
+        }
+        .form-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: var(--font);
+            letter-spacing: 0.3px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn:active {
+            transform: scale(0.96);
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+        .btn-secondary {
+            background: #e5e7eb;
+            color: var(--text);
+        }
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            border-radius: 8px;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Word List */
+        .word-list {
+            max-height: 420px;
+            overflow-y: auto;
+            border-radius: 10px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .word-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .word-list::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 4px;
+        }
+        .word-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border-bottom: 1px solid #f3f4f6;
+            transition: var(--transition);
+            cursor: pointer;
+            border-radius: 8px;
+        }
+        .word-item:active {
+            background: var(--primary-light);
+        }
+        .word-item:last-child {
+            border-bottom: none;
+        }
+        .word-info {
+            flex: 1;
+            min-width: 0;
+            margin-right: 8px;
+        }
+        .word-info .word-en {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .word-info .word-zh {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .word-tags {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            flex-shrink: 0;
+            margin-left: 6px;
+        }
+        .tag {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            white-space: nowrap;
+            letter-spacing: 0.2px;
+        }
+        .tag-new { background: #E3F2FD; color: #1976D2; }
+        .tag-review { background: var(--warning-light); color: #E65100; }
+        .tag-mastered { background: var(--success-light); color: #2E7D32; }
+        .tag-due { background: #FFCDD2; color: #B71C1C; }
+        .tag-mnemonic { background: #F3E5F5; color: #7B1FA2; }
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 2px 6px;
+            border-radius: 6px;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+        .delete-btn:active {
+            color: var(--danger);
+            background: var(--danger-light);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 30px 16px;
+            color: var(--text-secondary);
+        }
+        .empty-state .empty-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .empty-state p {
+            font-size: 0.85rem;
+        }
+
+        /* Review Page */
+        .review-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .summary-item {
+            background: var(--card-bg);
+            border-radius: var(--radius-sm);
+            padding: 10px 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .summary-item .number {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1.2;
+        }
+        .summary-item .label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+            font-weight: 500;
+        }
+
+        .daily-goal-setting {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .daily-goal-setting input,
+        .settings-group input {
+            width: 60px;
+            padding: 8px 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            text-align: center;
+            font-weight: 700;
+            outline: none;
+            font-family: var(--font);
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .daily-goal-setting input:focus,
+        .settings-group input:focus {
+            border-color: var(--primary);
+        }
+
+        .start-review-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(145deg, #FF9800, #F57C00);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            letter-spacing: 0.5px;
+            font-family: var(--font);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 6px 20px rgba(255, 152, 0, 0.3);
+        }
+        .start-review-btn:active {
+            transform: scale(0.98);
+        }
+        .start-review-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Review Mode */
+        .review-mode {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .review-mode.show {
+            display: block;
+        }
+        .review-progress {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        .progress-bar-container {
+            flex: 1;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), #7B5BBF);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        .progress-text {
+            white-space: nowrap;
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 0.75rem;
+        }
+
+        .review-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 24px 18px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid transparent;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .review-card:active {
+            transform: scale(0.99);
+        }
+        .review-card.revealed {
+            border-color: var(--primary);
+            cursor: default;
+        }
+        .review-card .word-display {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: 0.3px;
+            word-break: break-word;
+            padding: 0 8px;
+        }
+        .review-card .hint-text {
+            font-size: 0.75rem;
+            color: #aaa;
+            margin-top: 10px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        .review-card .meaning-display {
+            font-size: 1.1rem;
+            color: var(--primary);
+            font-weight: 600;
+            margin-top: 12px;
+            padding: 10px 16px;
+            background: var(--primary-light);
+            border-radius: 10px;
+            animation: fadeIn 0.25s ease;
+            display: none;
+            word-break: break-word;
+        }
+        .review-card.revealed .meaning-display {
+            display: block;
+        }
+        .review-card.revealed .hint-text {
+            display: none;
+        }
+        .review-card .mnemonic-display {
+            margin-top: 10px;
+            font-size: 0.78rem;
+            color: #7B1FA2;
+            font-style: italic;
+            display: none;
+            word-break: break-word;
+        }
+        .review-card.revealed .mnemonic-display.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .mnemonic-input-section {
+            margin-top: 12px;
+            display: none;
+            animation: slideDown 0.25s ease;
+            width: 100%;
+        }
+        .review-card.revealed .mnemonic-input-section {
+            display: block;
+        }
+        .mnemonic-input-section input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            outline: none;
+            font-family: var(--font);
+            transition: var(--transition);
+            text-align: center;
+            background: #FAFAFA;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .mnemonic-input-section input:focus {
+            border-color: #7B1FA2;
+            background: white;
+        }
+        .mnemonic-input-section input::placeholder {
+            color: #bbb;
+            font-size: 0.8rem;
+        }
+
+        .review-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+        }
+        .review-actions .btn {
+            flex: 1;
+            padding: 12px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            border-radius: 12px;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+        .btn-forgot {
+            background: var(--danger);
+            color: white;
+        }
+        .btn-know {
+            background: var(--success);
+            color: white;
+        }
+
+        /* Review Complete */
+        .review-complete {
+            text-align: center;
+            padding: 30px 16px;
+            display: none;
+            animation: fadeIn 0.35s ease;
+        }
+        .review-complete.show {
+            display: block;
+        }
+        .review-complete .complete-icon {
+            font-size: 3.5rem;
+            margin-bottom: 12px;
+        }
+        .review-complete h2 {
+            font-size: 1.3rem;
+            margin-bottom: 6px;
+            color: var(--text);
+        }
+        .review-complete p {
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            font-size: 0.85rem;
+        }
+        .complete-stats {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 18px;
+        }
+        .complete-stats .stat {
+            text-align: center;
+        }
+        .complete-stats .stat .num {
+            font-size: 1.6rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .complete-stats .stat .num.know {
+            color: var(--success);
+        }
+        .complete-stats .stat .num.forgot {
+            color: var(--danger);
+        }
+        .complete-stats .stat .lbl {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Settings & Check-in */
+        .checkin-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(145deg, #FFF3E0, #FFE0B2);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            margin-bottom: 10px;
+        }
+        .checkin-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .checkin-streak {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #E65100;
+        }
+        .checkin-details {
+            font-size: 0.8rem;
+            color: #6B4226;
+        }
+        .checkin-details .label {
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+        .checkin-btn {
+            background: white;
+            border: 2px solid #FF9800;
+            color: #E65100;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .checkin-btn:active {
+            transform: scale(0.95);
+        }
+        .checkin-btn.done {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        .settings-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .settings-group:last-child {
+            border-bottom: none;
+        }
+        .settings-group label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        .settings-group input {
+            width: 65px;
+            padding: 6px 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            text-align: center;
+            font-weight: 600;
+            outline: none;
+            font-family: var(--font);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: calc(20px + var(--safe-bottom));
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 24px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            z-index: 2000;
+            opacity: 0;
+            transition: all 0.35s ease;
+            pointer-events: none;
+            font-family: var(--font);
+            max-width: 80%;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast.success { background: rgba(76, 175, 80, 0.9); }
+        .toast.error { background: rgba(244, 67, 54, 0.9); }
+        .toast.info { background: rgba(91, 106, 191, 0.9); }
+
+        /* 响应式微调 */
+        @media (max-width: 380px) {
+            .app-header h1 { font-size: 1.1rem; }
+            .header-stats span { padding: 3px 7px; font-size: 0.65rem; }
+            .nav-tab { font-size: 0.75rem; padding: 8px 4px; }
+            .review-card .word-display { font-size: 1.5rem; }
+            .card { padding: 12px; }
+            .add-word-btn { padding: 12px; font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-inner">
+            <h1><span class="logo-icon">📚</span> 记忆单词</h1>
+            <div class="header-stats">
+                <span id="headerTotalWords">📖 0</span>
+                <span id="headerDueWords">⏰ 0</span>
+                <span id="headerStreak">🔥 0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav-tabs">
+        <button class="nav-tab active" data-page="library" onclick="switchPage('library')">
+            📖 单词库 <span class="tab-badge" id="libraryBadge" style="display:none;"></span>
+        </button>
+        <button class="nav-tab" data-page="review" onclick="switchPage('review')">
+            🧠 背诵区 <span class="tab-badge review-badge" id="reviewBadge" style="display:none;">0</span>
+        </button>
+        <button class="nav-tab" data-page="settings" onclick="switchPage('settings')">
+            ⚙️ 设置 <span class="tab-badge checkin-badge" id="checkinBadge" style="display:none;">✓</span>
+        </button>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-container">
+
+        <!-- ==================== 单词库页面 ==================== -->
+        <div class="page active" id="page-library">
+            <div class="card">
+                <button class="add-word-btn" onclick="toggleAddForm()">
+                    ➕ 添加单词/词组
+                </button>
+                <div class="add-form" id="addForm">
+                    <div class="form-group">
+                        <label>英文单词/词组</label>
+                        <input type="text" id="inputWord" placeholder="例如：apple / take off" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label>中文释义</label>
+                        <input type="text" id="inputMeaning" placeholder="例如：苹果 / 起飞" autocomplete="off">
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn-primary" onclick="addWord()">✅ 添加</button>
+                        <button class="btn btn-secondary" onclick="toggleAddForm(false)">取消</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">📋</span> 我的单词本 <span style="font-size:0.75rem;color:#aaa;font-weight:400;" id="wordCountLabel"></span></div>
+                <div class="word-list" id="wordList">
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <p>还没有单词，点击上方按钮添加吧！</p>
+                    </div>
+                </div>
+                <div id="masteredDeleteSection" style="margin-top:12px; display:none;">
+                    <div style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:8px;">🎯 已掌握且超过阈值可删除：</div>
+                    <div id="masteredDeleteList"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">📊</span> 学习概览</div>
+                <div class="review-summary" style="margin-bottom:0;">
+                    <div class="summary-item">
+                        <div class="number" id="statTotal">0</div>
+                        <div class="label">总单词数</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="number" id="statNew" style="color:#1976D2;">0</div>
+                        <div class="label">新词</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="number" id="statReview" style="color:#E65100;">0</div>
+                        <div class="label">复习中</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="number" id="statMastered" style="color:#2E7D32;">0</div>
+                        <div class="label">已掌握</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 背诵区页面 ==================== -->
+        <div class="page" id="page-review">
+            <div class="card">
+                <div class="card-title"><span class="icon">🎯</span> 每日背诵目标</div>
+                <div class="daily-goal-setting">
+                    <span style="font-weight:500;">每天</span>
+                    <input type="number" id="dailyGoalInput" min="1" max="200" value="20">
+                    <span style="font-weight:500;">个</span>
+                    <button class="btn btn-sm btn-primary" onclick="saveDailyGoal()">保存</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">📅</span> 今日概览</div>
+                <div class="review-summary" style="margin-bottom:0;">
+                    <div class="summary-item">
+                        <div class="number" id="todayDue">0</div>
+                        <div class="label">待复习</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="number" id="todayNew">0</div>
+                        <div class="label">新词补充</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="number" id="todayTotal" style="color:var(--primary);">0</div>
+                        <div class="label">今日总计</div>
+                    </div>
+                </div>
+                <div style="margin-top:10px;font-size:0.8rem;color:var(--text-secondary);text-align:center;" id="reviewMessage">
+                    准备开始今日背诵吧！
+                </div>
+            </div>
+
+            <button class="start-review-btn" id="startReviewBtn" onclick="startReview()">
+                🚀 开始背诵
+            </button>
+
+            <!-- 背诵模式 -->
+            <div class="review-mode" id="reviewMode">
+                <div class="review-progress">
+                    <span id="progressLabel">第 1 个</span>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="progressBar" style="width:0%;"></div>
+                    </div>
+                    <span class="progress-text" id="progressText">0/0</span>
+                </div>
+
+                <div class="review-card" id="reviewCard" onclick="revealCard()">
+                    <div class="word-display" id="reviewWord">—</div>
+                    <div class="hint-text" id="hintText">💡 点击查看释义</div>
+                    <div class="meaning-display" id="reviewMeaning"></div>
+                    <div class="mnemonic-display" id="reviewMnemonic"></div>
+                    <div class="mnemonic-input-section" onclick="event.stopPropagation();">
+                        <input type="text" id="mnemonicInput" placeholder="✏️ 添加助记（帮助记忆）" autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="review-actions">
+                    <button class="btn btn-forgot" id="btnForgot" onclick="markForgot()" disabled>
+                        😕 忘记
+                    </button>
+                    <button class="btn btn-know" id="btnKnow" onclick="markKnow()" disabled>
+                        😊 认识
+                    </button>
+                </div>
+            </div>
+
+            <!-- 背诵完成 -->
+            <div class="review-complete" id="reviewComplete">
+                <div class="complete-icon">🎉</div>
+                <h2>今日背诵完成！</h2>
+                <p id="completeMessage">太棒了！继续保持！</p>
+                <div class="complete-stats">
+                    <div class="stat">
+                        <div class="num know" id="completeKnow">0</div>
+                        <div class="lbl">😊 认识</div>
+                    </div>
+                    <div class="stat">
+                        <div class="num forgot" id="completeForgot">0</div>
+                        <div class="lbl">😕 忘记</div>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="closeReviewComplete()">返回背诵区</button>
+            </div>
+        </div>
+
+        <!-- ==================== 设置页面 ==================== -->
+        <div class="page" id="page-settings">
+            <div class="card">
+                <div class="card-title"><span class="icon">🔥</span> 打卡系统</div>
+                <div class="checkin-card">
+                    <div class="checkin-info">
+                        <div class="checkin-streak" id="streakCount">0</div>
+                        <div class="checkin-details">
+                            <div class="label">连续打卡</div>
+                            <div id="lastCheckinDate">今日尚未打卡</div>
+                        </div>
+                    </div>
+                    <button class="checkin-btn" id="checkinBtn" onclick="manualCheckin()">📅 打卡</button>
+                </div>
+                <div style="font-size:0.75rem;color:var(--text-secondary);">完成每日背诵目标后自动打卡，也可手动打卡。</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">⚙️</span> 遗忘曲线设置</div>
+                <div class="settings-group">
+                    <label>每日目标（个）</label>
+                    <input type="number" id="settingsDailyGoal" min="1" max="200" value="20" onchange="updateSettingsFromInputs()">
+                </div>
+                <div class="settings-group">
+                    <label>掌握后删除阈值（天）</label>
+                    <input type="number" id="settingsDeleteThreshold" min="1" max="365" value="30" onchange="updateSettingsFromInputs()">
+                </div>
+                <div class="settings-group">
+                    <label>遗忘曲线间隔（天）</label>
+                    <div style="font-size:0.75rem;color:var(--text-secondary);">1,2,4,7,15,30（固定）</div>
+                </div>
+                <div style="margin-top:8px;font-size:0.7rem;color:#aaa;">* 忘记时回退一个阶段，认识则推进。</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">📈</span> 统计信息</div>
+                <div class="settings-group">
+                    <label>总复习次数</label>
+                    <span id="statTotalReviews">0</span>
+                </div>
+                <div class="settings-group">
+                    <label>总认识次数</label>
+                    <span id="statTotalKnow">0</span>
+                </div>
+                <div class="settings-group">
+                    <label>总忘记次数</label>
+                    <span id="statTotalForgot">0</span>
+                </div>
+                <div class="settings-group">
+                    <label>累计打卡天数</label>
+                    <span id="statTotalCheckins">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ==================== 数据管理 ====================
+        const STORAGE_KEY = 'ebbinghaus_vocab_app_v2';
+        const EBBINGHAUS_INTERVALS = [1, 2, 4, 7, 15, 30]; // 天
+
+        let appData = loadData();
+        let reviewQueue = [];
+        let reviewIndex = 0;
+        let reviewStats = { know: 0, forgot: 0 };
+        let currentMnemonic = '';
+
+        function getDefaultData() {
+            return {
+                words: [],
+                settings: {
+                    dailyGoal: 20,
+                    deleteThresholdDays: 30,
+                },
+                checkIns: [], // 日期字符串数组 'YYYY-MM-DD'
+                stats: {
+                    totalReviews: 0,
+                    totalKnow: 0,
+                    totalForgot: 0,
+                }
+            };
+        }
+
+        function loadData() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const data = JSON.parse(raw);
+                    // 合并默认设置以防缺失
+                    const def = getDefaultData();
+                    return {
+                        ...def,
+                        ...data,
+                        settings: { ...def.settings, ...(data.settings || {}) },
+                        stats: { ...def.stats, ...(data.stats || {}) },
+                        checkIns: data.checkIns || [],
+                    };
+                }
+            } catch (e) {
+                console.error('加载数据失败:', e);
+            }
+            return getDefaultData();
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            } catch (e) {
+                console.error('保存数据失败:', e);
+                showToast('数据保存失败', 'error');
+            }
+        }
+
+        function getTodayStr() {
+            const d = new Date();
+            return d.toISOString().split('T')[0];
+        }
+
+        function addDays(dateStr, days) {
+            const d = new Date(dateStr + 'T00:00:00');
+            d.setDate(d.getDate() + days);
+            return d.toISOString().split('T')[0];
+        }
+
+        function daysBetween(dateStr1, dateStr2) {
+            const d1 = new Date(dateStr1 + 'T00:00:00');
+            const d2 = new Date(dateStr2 + 'T00:00:00');
+            return Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+        }
+
+        function getNextReviewDate(stage) {
+            if (stage >= EBBINGHAUS_INTERVALS.length) return null;
+            const days = EBBINGHAUS_INTERVALS[stage];
+            return addDays(getTodayStr(), days);
+        }
+
+        function getWordStageLabel(word) {
+            if (word.stage >= EBBINGHAUS_INTERVALS.length) return '已掌握';
+            if (word.stage === 0 && !word.lastReviewed) return '新词';
+            return `复习中 (${word.stage}/${EBBINGHAUS_INTERVALS.length})`;
+        }
+
+        function getWordTagClass(word) {
+            if (word.stage >= EBBINGHAUS_INTERVALS.length) return 'tag-mastered';
+            if (word.stage === 0 && !word.lastReviewed) return 'tag-new';
+            return 'tag-review';
+        }
+
+        // ==================== Toast ====================
+        let toastTimer = null;
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type + ' show';
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        // ==================== 页面切换 ====================
+        function switchPage(pageName) {
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.page === pageName);
+            });
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.toggle('active', page.id === 'page-' + pageName);
+            });
+            if (pageName === 'library') {
+                renderWordList();
+                updateHeaderStats();
+                updateLibraryStats();
+                updateMasteredDeleteSection();
+            } else if (pageName === 'review') {
+                updateReviewOverview();
+                updateHeaderStats();
+            } else if (pageName === 'settings') {
+                updateSettingsPage();
+                updateHeaderStats();
+            }
+        }
+
+        // ==================== 添加单词 ====================
+        function toggleAddForm(show = null) {
+            const form = document.getElementById('addForm');
+            const shouldShow = show !== null ? show : !form.classList.contains('show');
+            form.classList.toggle('show', shouldShow);
+            if (shouldShow) document.getElementById('inputWord').focus();
+        }
+
+        function addWord() {
+            const wordInput = document.getElementById('inputWord');
+            const meaningInput = document.getElementById('inputMeaning');
+            const word = wordInput.value.trim();
+            const meaning = meaningInput.value.trim();
+
+            if (!word) { showToast('请输入英文单词/词组', 'error'); wordInput.focus(); return; }
+            if (!meaning) { showToast('请输入中文释义', 'error'); meaningInput.focus(); return; }
+
+            const exists = appData.words.some(w => w.word.toLowerCase() === word.toLowerCase());
+            if (exists) { showToast('该单词已存在！', 'error'); return; }
+
+            const newWord = {
+                id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                word: word,
+                meaning: meaning,
+                mnemonic: '',
+                stage: 0,
+                nextReviewDate: null,
+                createdAt: getTodayStr(),
+                lastReviewed: null,
+                masteredDate: null, // 达到掌握阶段的日期
+                totalReviews: 0,
+                correctReviews: 0,
+                wrongReviews: 0
+            };
+
+            appData.words.push(newWord);
+            saveData();
+            wordInput.value = '';
+            meaningInput.value = '';
+            toggleAddForm(false);
+            renderWordList();
+            updateHeaderStats();
+            updateLibraryStats();
+            showToast(`✅ 已添加「${word}」`, 'success');
+        }
+
+        function deleteWord(id) {
+            const word = appData.words.find(w => w.id === id);
+            if (!word) return;
+            if (!confirm(`确定删除「${word.word}」吗？`)) return;
+            appData.words = appData.words.filter(w => w.id !== id);
+            saveData();
+            renderWordList();
+            updateHeaderStats();
+            updateLibraryStats();
+            updateReviewOverview();
+            updateMasteredDeleteSection();
+            showToast(`已删除「${word.word}」`, 'info');
+        }
+
+        function renderWordList() {
+            const container = document.getElementById('wordList');
+            const words = appData.words;
+            const countLabel = document.getElementById('wordCountLabel');
+
+            if (words.length === 0) {
+                container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>还没有单词，点击上方按钮添加吧！</p></div>`;
+                countLabel.textContent = '';
+                return;
+            }
+
+            countLabel.textContent = `(共 ${words.length} 个)`;
+            const sortedWords = [...words].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+            container.innerHTML = sortedWords.map(word => {
+                const tagClass = getWordTagClass(word);
+                const stageLabel = getWordStageLabel(word);
+                const hasMnemonic = word.mnemonic && word.mnemonic.trim() ? ' 📝' : '';
+                return `
+                    <div class="word-item" onclick="showWordDetail('${word.id}')">
+                        <div class="word-info">
+                            <div class="word-en">${escapeHtml(word.word)}${hasMnemonic}</div>
+                            <div class="word-zh">${escapeHtml(word.meaning)}</div>
+                        </div>
+                        <div class="word-tags">
+                            <span class="tag ${tagClass}">${stageLabel}</span>
+                            <button class="delete-btn" onclick="event.stopPropagation(); deleteWord('${word.id}')" title="删除">✕</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showWordDetail(id) {
+            const word = appData.words.find(w => w.id === id);
+            if (!word) return;
+            let detailMsg = `📖 ${word.word}\n中文：${word.meaning}\n状态：${getWordStageLabel(word)}`;
+            if (word.mnemonic) detailMsg += `\n📝 助记：${word.mnemonic}`;
+            if (word.lastReviewed) {
+                detailMsg += `\n上次复习：${word.lastReviewed}`;
+                if (word.nextReviewDate) detailMsg += `\n下次复习：${word.nextReviewDate}`;
+            }
+            if (word.masteredDate) detailMsg += `\n掌握日期：${word.masteredDate}`;
+            detailMsg += `\n总复习次数：${word.totalReviews}`;
+            alert(detailMsg);
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // ==================== 已掌握可删除区域 ====================
+        function updateMasteredDeleteSection() {
+            const threshold = appData.settings.deleteThresholdDays || 30;
+            const today = getTodayStr();
+            const deletable = appData.words.filter(w =>
+                w.masteredDate && daysBetween(w.masteredDate, today) >= threshold
+            );
+            const section = document.getElementById('masteredDeleteSection');
+            const listEl = document.getElementById('masteredDeleteList');
+            if (deletable.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+            section.style.display = 'block';
+            listEl.innerHTML = deletable.map(w => `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:0.85rem;">
+                    <span>${escapeHtml(w.word)} (${escapeHtml(w.meaning)})</span>
+                    <button class="btn btn-sm btn-danger" onclick="deleteWord('${w.id}')">删除</button>
+                </div>
+            `).join('');
+        }
+
+        // ==================== 统计数据 ====================
+        function updateHeaderStats() {
+            const total = appData.words.length;
+            const today = getTodayStr();
+            const dueWords = appData.words.filter(w => w.nextReviewDate && w.nextReviewDate <= today && w.stage < EBBINGHAUS_INTERVALS.length);
+            document.getElementById('headerTotalWords').textContent = `📖 ${total}`;
+            document.getElementById('headerDueWords').textContent = `⏰ ${dueWords.length}`;
+            document.getElementById('headerStreak').textContent = `🔥 ${calculateStreak()}`;
+
+            const reviewBadge = document.getElementById('reviewBadge');
+            if (dueWords.length > 0) {
+                reviewBadge.textContent = dueWords.length;
+                reviewBadge.style.display = 'inline-block';
+            } else {
+                reviewBadge.style.display = 'none';
+            }
+
+            const libraryBadge = document.getElementById('libraryBadge');
+            const newWords = appData.words.filter(w => w.stage === 0 && !w.lastReviewed);
+            if (newWords.length > 0) {
+                libraryBadge.textContent = newWords.length;
+                libraryBadge.style.display = 'inline-block';
+            } else {
+                libraryBadge.style.display = 'none';
+            }
+
+            // 打卡badge
+            const checkinBadge = document.getElementById('checkinBadge');
+            if (isTodayCheckedIn()) {
+                checkinBadge.style.display = 'inline-block';
+            } else {
+                checkinBadge.style.display = 'none';
+            }
+        }
+
+        function updateLibraryStats() {
+            const words = appData.words;
+            const total = words.length;
+            const newCount = words.filter(w => w.stage === 0 && !w.lastReviewed).length;
+            const reviewCount = words.filter(w => w.stage > 0 && w.stage < EBBINGHAUS_INTERVALS.length).length;
+            const masteredCount = words.filter(w => w.stage >= EBBINGHAUS_INTERVALS.length).length;
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statNew').textContent = newCount;
+            document.getElementById('statReview').textContent = reviewCount;
+            document.getElementById('statMastered').textContent = masteredCount;
+        }
+
+        // ==================== 打卡系统 ====================
+        function isTodayCheckedIn() {
+            return appData.checkIns.includes(getTodayStr());
+        }
+
+        function calculateStreak() {
+            let streak = 0;
+            const today = getTodayStr();
+            let date = new Date(today + 'T00:00:00');
+            // 如果今天还没打卡，从昨天开始算连续
+            if (!isTodayCheckedIn()) {
+                date.setDate(date.getDate() - 1);
+            }
+            while (true) {
+                const dateStr = date.toISOString().split('T')[0];
+                if (appData.checkIns.includes(dateStr)) {
+                    streak++;
+                    date.setDate(date.getDate() - 1);
+                } else {
+                    break;
+                }
+            }
+            return streak;
+        }
+
+        function manualCheckin() {
+            const today = getTodayStr();
+            if (!appData.checkIns.includes(today)) {
+                appData.checkIns.push(today);
+                saveData();
+                updateHeaderStats();
+                updateSettingsPage();
+                showToast('✅ 打卡成功！', 'success');
+            } else {
+                showToast('今日已打卡', 'info');
+            }
+        }
+
+        function autoCheckinIfGoalMet() {
+            // 在完成背诵后调用，如果今日已满足目标且未打卡则自动打卡
+            const today = getTodayStr();
+            if (appData.checkIns.includes(today)) return;
+
+            const dailyGoal = appData.settings.dailyGoal || 20;
+            // 简单判断：今日已完成背诵（通过reviewStats累计？或检查最后一次背诵记录） 
+            // 为了方便，我们在finishReview中直接调用自动打卡
+            // 这里留空
+        }
+
+        // ==================== 每日目标 ====================
+        function saveDailyGoal() {
+            const input = document.getElementById('dailyGoalInput');
+            const goal = parseInt(input.value);
+            if (isNaN(goal) || goal < 1 || goal > 200) {
+                showToast('请输入1-200之间的数字', 'error');
+                return;
+            }
+            appData.settings.dailyGoal = goal;
+            saveData();
+            updateReviewOverview();
+            document.getElementById('settingsDailyGoal').value = goal;
+            showToast(`✅ 每日目标已设为 ${goal} 个`, 'success');
+        }
+
+        function updateSettingsFromInputs() {
+            const dailyGoal = parseInt(document.getElementById('settingsDailyGoal').value);
+            const threshold = parseInt(document.getElementById('settingsDeleteThreshold').value);
+            if (!isNaN(dailyGoal) && dailyGoal >= 1 && dailyGoal <= 200) {
+                appData.settings.dailyGoal = dailyGoal;
+                document.getElementById('dailyGoalInput').value = dailyGoal;
+            }
+            if (!isNaN(threshold) && threshold >= 1 && threshold <= 365) {
+                appData.settings.deleteThresholdDays = threshold;
+            }
+            saveData();
+            updateReviewOverview();
+            updateMasteredDeleteSection();
+            showToast('设置已保存', 'success');
+        }
+
+        // ==================== 背诵区概览 ====================
+        function updateReviewOverview() {
+            const today = getTodayStr();
+            const dailyGoal = appData.settings.dailyGoal || 20;
+            document.getElementById('dailyGoalInput').value = dailyGoal;
+
+            const dueWords = appData.words.filter(w =>
+                w.nextReviewDate && w.nextReviewDate <= today && w.stage < EBBINGHAUS_INTERVALS.length
+            );
+            const newCandidates = appData.words.filter(w =>
+                w.stage === 0 && (!w.lastReviewed || !w.nextReviewDate || w.nextReviewDate <= today)
+            );
+
+            const dueCount = dueWords.length;
+            const neededFromNew = Math.max(0, dailyGoal - dueCount);
+            const newToAdd = Math.min(neededFromNew, newCandidates.length);
+            const totalToday = dueCount + newToAdd;
+
+            document.getElementById('todayDue').textContent = dueCount;
+            document.getElementById('todayNew').textContent = newToAdd;
+            document.getElementById('todayTotal').textContent = totalToday;
+
+            const msg = document.getElementById('reviewMessage');
+            if (totalToday === 0) {
+                msg.textContent = '📭 没有需要背诵的单词，去单词库添加新词吧！';
+                document.getElementById('startReviewBtn').disabled = true;
+            } else {
+                if (dueCount > 0 && newToAdd > 0) msg.textContent = `📋 复习 ${dueCount} 旧词 + 学习 ${newToAdd} 新词`;
+                else if (dueCount > 0) msg.textContent = `📋 复习 ${dueCount} 旧词（满足目标）`;
+                else msg.textContent = `📋 学习 ${newToAdd} 新词`;
+                document.getElementById('startReviewBtn').disabled = false;
+            }
+            updateHeaderStats();
+        }
+
+        // ==================== 开始背诵 ====================
+        function startReview() {
+            const today = getTodayStr();
+            const dailyGoal = appData.settings.dailyGoal || 20;
+
+            const dueWords = appData.words.filter(w =>
+                w.nextReviewDate && w.nextReviewDate <= today && w.stage < EBBINGHAUS_INTERVALS.length
+            );
+            const newCandidates = appData.words.filter(w =>
+                w.stage === 0 && (!w.lastReviewed || !w.nextReviewDate || w.nextReviewDate <= today)
+            );
+
+            const dueCount = dueWords.length;
+            const neededFromNew = Math.max(0, dailyGoal - dueCount);
+            const shuffledNew = [...newCandidates].sort(() => Math.random() - 0.5);
+            const selectedNew = shuffledNew.slice(0, neededFromNew);
+
+            reviewQueue = [...dueWords, ...selectedNew].sort(() => Math.random() - 0.5);
+
+            if (reviewQueue.length === 0) {
+                showToast('没有可背诵的单词，请先添加单词', 'error');
+                return;
+            }
+
+            reviewIndex = 0;
+            reviewStats = { know: 0, forgot: 0 };
+
+            document.getElementById('startReviewBtn').style.display = 'none';
+            document.querySelectorAll('#page-review .card').forEach(c => c.style.display = 'none');
+            document.getElementById('reviewMode').classList.add('show');
+            document.getElementById('reviewComplete').classList.remove('show');
+
+            showCurrentWord();
+        }
+
+        function showCurrentWord() {
+            if (reviewIndex >= reviewQueue.length) {
+                finishReview();
+                return;
+            }
+
+            const word = reviewQueue[reviewIndex];
+            const card = document.getElementById('reviewCard');
+            card.classList.remove('revealed');
+
+            document.getElementById('reviewWord').textContent = word.word;
+            document.getElementById('reviewMeaning').textContent = word.meaning;
+            document.getElementById('reviewMeaning').style.display = 'none';
+            document.getElementById('hintText').style.display = 'block';
+            document.getElementById('reviewMnemonic').classList.remove('show');
+            document.getElementById('mnemonicInput').value = word.mnemonic || '';
+            currentMnemonic = word.mnemonic || '';
+
+            const progress = (reviewIndex / reviewQueue.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressLabel').textContent = `第 ${reviewIndex + 1} 个`;
+            document.getElementById('progressText').textContent = `${reviewIndex + 1}/${reviewQueue.length}`;
+
+            document.getElementById('btnKnow').disabled = true;
+            document.getElementById('btnForgot').disabled = true;
+
+            if (word.mnemonic && word.mnemonic.trim()) {
+                document.getElementById('reviewMnemonic').textContent = '📝 助记：' + word.mnemonic;
+            } else {
+                document.getElementById('reviewMnemonic').textContent = '';
+            }
+        }
+
+        function revealCard() {
+            const card = document.getElementById('reviewCard');
+            if (card.classList.contains('revealed')) return;
+
+            card.classList.add('revealed');
+            document.getElementById('reviewMeaning').style.display = 'block';
+            document.getElementById('hintText').style.display = 'none';
+
+            const word = reviewQueue[reviewIndex];
+            if (word.mnemonic && word.mnemonic.trim()) {
+                document.getElementById('reviewMnemonic').classList.add('show');
+            }
+
+            document.getElementById('btnKnow').disabled = false;
+            document.getElementById('btnForgot').disabled = false;
+        }
+
+        function saveMnemonicInput() {
+            const input = document.getElementById('mnemonicInput');
+            currentMnemonic = input.value.trim();
+        }
+
+        function markKnow() {
+            if (reviewIndex >= reviewQueue.length) return;
+            saveMnemonicInput();
+            const word = reviewQueue[reviewIndex];
+            const today = getTodayStr();
+
+            word.mnemonic = currentMnemonic;
+
+            // 认识：stage += 1，如果达到数组长度则标记掌握
+            if (word.stage < EBBINGHAUS_INTERVALS.length) {
+                word.stage += 1;
+                if (word.stage >= EBBINGHAUS_INTERVALS.length) {
+                    word.masteredDate = today;
+                    word.nextReviewDate = null;
+                } else {
+                    word.nextReviewDate = getNextReviewDate(word.stage);
+                }
+            } else {
+                // 已经是掌握状态，再次认识则保持
+                word.nextReviewDate = null;
+                if (!word.masteredDate) word.masteredDate = today;
+            }
+
+            word.lastReviewed = today;
+            word.totalReviews += 1;
+            word.correctReviews += 1;
+            appData.stats.totalReviews += 1;
+            appData.stats.totalKnow += 1;
+
+            reviewStats.know += 1;
+            saveData();
+            reviewIndex += 1;
+
+            const progress = (reviewIndex / reviewQueue.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+
+            showCurrentWord();
+        }
+
+        function markForgot() {
+            if (reviewIndex >= reviewQueue.length) return;
+            saveMnemonicInput();
+            const word = reviewQueue[reviewIndex];
+            const today = getTodayStr();
+
+            word.mnemonic = currentMnemonic;
+
+            // 忘记：如果stage>0则回退一个阶段，否则保持0
+            if (word.stage > 0) {
+                word.stage -= 1;
+                if (word.stage >= EBBINGHAUS_INTERVALS.length) {
+                    // 极端情况不会发生
+                    word.stage = EBBINGHAUS_INTERVALS.length - 1;
+                }
+                word.nextReviewDate = getNextReviewDate(word.stage);
+            } else {
+                word.stage = 0;
+                word.nextReviewDate = addDays(today, 1);
+            }
+            // 如果曾经掌握过，忘记则取消掌握标记
+            word.masteredDate = null;
+
+            word.lastReviewed = today;
+            word.totalReviews += 1;
+            word.wrongReviews += 1;
+            appData.stats.totalReviews += 1;
+            appData.stats.totalForgot += 1;
+
+            reviewStats.forgot += 1;
+            saveData();
+            reviewIndex += 1;
+
+            const progress = (reviewIndex / reviewQueue.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+
+            showCurrentWord();
+        }
+
+        function finishReview() {
+            document.getElementById('reviewMode').classList.remove('show');
+            const completeEl = document.getElementById('reviewComplete');
+            completeEl.classList.add('show');
+
+            document.getElementById('completeKnow').textContent = reviewStats.know;
+            document.getElementById('completeForgot').textContent = reviewStats.forgot;
+
+            const total = reviewStats.know + reviewStats.forgot;
+            const knowRate = total > 0 ? Math.round((reviewStats.know / total) * 100) : 0;
+            let msg = `今日完成 ${total} 个单词，认识率 ${knowRate}%`;
+            if (knowRate >= 80) msg += '，表现优秀！🌟';
+            else if (knowRate >= 60) msg += '，继续加油！💪';
+            else msg += '，记得多复习哦！📖';
+            document.getElementById('completeMessage').textContent = msg;
+
+            document.getElementById('progressBar').style.width = '100%';
+            document.getElementById('progressText').textContent = `${total}/${total}`;
+
+            // 自动打卡
+            const today = getTodayStr();
+            if (!appData.checkIns.includes(today)) {
+                appData.checkIns.push(today);
+                saveData();
+                showToast('✅ 已完成目标，自动打卡！', 'success');
+            }
+
+            updateHeaderStats();
+            updateLibraryStats();
+            updateReviewOverview();
+            updateMasteredDeleteSection();
+        }
+
+        function closeReviewComplete() {
+            document.getElementById('reviewComplete').classList.remove('show');
+            document.getElementById('startReviewBtn').style.display = 'flex';
+            document.querySelectorAll('#page-review .card').forEach(c => c.style.display = 'block');
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('progressText').textContent = '0/0';
+            updateReviewOverview();
+        }
+
+        // ==================== 设置页面 ====================
+        function updateSettingsPage() {
+            document.getElementById('settingsDailyGoal').value = appData.settings.dailyGoal || 20;
+            document.getElementById('settingsDeleteThreshold').value = appData.settings.deleteThresholdDays || 30;
+
+            const streak = calculateStreak();
+            document.getElementById('streakCount').textContent = streak;
+            const lastCheckin = appData.checkIns.length > 0 ? appData.checkIns[appData.checkIns.length - 1] : '尚未打卡';
+            document.getElementById('lastCheckinDate').textContent = `最近打卡：${lastCheckin}`;
+
+            document.getElementById('statTotalReviews').textContent = appData.stats.totalReviews;
+            document.getElementById('statTotalKnow').textContent = appData.stats.totalKnow;
+            document.getElementById('statTotalForgot').textContent = appData.stats.totalForgot;
+            document.getElementById('statTotalCheckins').textContent = appData.checkIns.length;
+
+            const checkinBtn = document.getElementById('checkinBtn');
+            if (isTodayCheckedIn()) {
+                checkinBtn.textContent = '✅ 已打卡';
+                checkinBtn.classList.add('done');
+                checkinBtn.disabled = true;
+            } else {
+                checkinBtn.textContent = '📅 打卡';
+                checkinBtn.classList.remove('done');
+                checkinBtn.disabled = false;
+            }
+        }
+
+        // ==================== 键盘快捷键 ====================
+        document.addEventListener('keydown', function(e) {
+            const reviewMode = document.getElementById('reviewMode');
+            if (!reviewMode.classList.contains('show')) return;
+
+            if (e.key === ' ' || e.key === 'Enter') {
+                e.preventDefault();
+                const card = document.getElementById('reviewCard');
+                if (!card.classList.contains('revealed')) revealCard();
+            } else if (e.key === '1' || e.key === 'k' || e.key === 'K') {
+                e.preventDefault();
+                if (!document.getElementById('btnKnow').disabled) markKnow();
+            } else if (e.key === '2' || e.key === 'f' || e.key === 'F') {
+                e.preventDefault();
+                if (!document.getElementById('btnForgot').disabled) markForgot();
+            }
+        });
+
+        // ==================== 初始化 ====================
+        function init() {
+            document.getElementById('dailyGoalInput').value = appData.settings.dailyGoal || 20;
+            document.getElementById('settingsDailyGoal').value = appData.settings.dailyGoal || 20;
+            document.getElementById('settingsDeleteThreshold').value = appData.settings.deleteThresholdDays || 30;
+
+            renderWordList();
+            updateHeaderStats();
+            updateLibraryStats();
+            updateReviewOverview();
+            updateSettingsPage();
+            updateMasteredDeleteSection();
+
+            // 自动检查逾期
+            const today = getTodayStr();
+            const overdue = appData.words.filter(w =>
+                w.nextReviewDate && w.nextReviewDate < today && w.stage < EBBINGHAUS_INTERVALS.length
+            );
+            if (overdue.length > 0) {
+                showToast(`⏰ 有 ${overdue.length} 个单词逾期未复习！`, 'info');
+            }
+        }
+
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                if (this.dataset.page === 'review') {
+                    updateReviewOverview();
+                    updateHeaderStats();
+                }
+            });
+        });
+
+        document.getElementById('inputMeaning').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); addWord(); }
+        });
+        document.getElementById('inputWord').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); document.getElementById('inputMeaning').focus(); }
+        });
+        document.getElementById('mnemonicInput').addEventListener('input', saveMnemonicInput);
+
+        // 设置输入框回车保存
+        document.getElementById('settingsDailyGoal').addEventListener('change', updateSettingsFromInputs);
+        document.getElementById('settingsDeleteThreshold').addEventListener('change', updateSettingsFromInputs);
+
+        init();
+
+        setInterval(() => {
+            updateHeaderStats();
+            if (document.getElementById('page-review').classList.contains('active')) {
+                updateReviewOverview();
+            }
+            if (document.getElementById('page-settings').classList.contains('active')) {
+                updateSettingsPage();
+            }
+        }, 60000);
+    </script>
+</body>
+</html>
