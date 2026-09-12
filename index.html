@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>仅此一家</title>
+<title>记忆单词 · 艾宾浩斯</title>
 <style>
 :root{--primary:#5B6ABF;--primary-dark:#4A56A8;--primary-light:#E8EBF7;--success:#4CAF50;--success-light:#E8F5E9;--danger:#F44336;--danger-light:#FFEBEE;--warning:#FF9800;--warning-light:#FFF3E0;--archive:#78909C;--archive-light:#ECEFF1;--text:#1A1A2E;--text-secondary:#6B7280;--bg:#F5F6FA;--card-bg:#FFFFFF;--shadow:0 8px 25px rgba(0,0,0,0.06);--radius:20px;--radius-sm:12px;--transition:all 0.25s cubic-bezier(0.4,0,0.2,1);--font:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--header-h:62px;}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -204,6 +204,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .toast.error{background:rgba(244,67,54,0.92);}
 .toast.info{background:rgba(91,106,191,0.92);}
 .user-badge{display:inline-flex;align-items:center;gap:6px;background:var(--primary-light);color:var(--primary);padding:4px 12px;border-radius:20px;font-size:0.8rem;font-weight:600;}
+.user-hero{background:linear-gradient(145deg,#E8EBF7 0%,#F3E5F5 100%);border-radius:var(--radius);padding:18px;margin-bottom:12px;border:1px solid rgba(91,106,191,0.1);}
+.user-hero .label{font-size:0.68rem;color:#999;text-transform:uppercase;letter-spacing:1px;font-weight:600;}
+.user-hero .name{font-size:1.6rem;font-weight:700;color:var(--primary);margin:4px 0 12px;}
+.user-hero .actions{display:flex;gap:6px;flex-wrap:wrap;}
 .order-selector{display:flex;gap:6px;margin-top:8px;}
 .order-option{flex:1;padding:8px 10px;border-radius:10px;border:2px solid #e5e7eb;background:white;color:var(--text-secondary);font-size:0.78rem;font-weight:600;cursor:pointer;font-family:var(--font);transition:var(--transition);text-align:center;}
 .order-option.active{border-color:var(--primary);background:var(--primary-light);color:var(--primary);}
@@ -214,7 +218,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .tag-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:16px;background:#f0f0f0;color:var(--text-secondary);font-size:0.75rem;font-weight:600;cursor:pointer;transition:var(--transition);border:2px solid transparent;}
 .tag-pill.active{background:var(--primary-light);color:var(--primary);border-color:var(--primary);}
 .tag-pill .count{background:rgba(0,0,0,0.1);border-radius:10px;padding:0 6px;font-size:0.65rem;}
-/* 标签管理新样式 */
 .tag-card{padding:12px 14px;background:white;border-radius:10px;border:2px solid #e5e7eb;margin-bottom:8px;cursor:pointer;transition:var(--transition);text-align:left;}
 .tag-card:hover,.tag-card:active{border-color:var(--primary);background:var(--primary-light);}
 .tag-card-name{font-weight:700;font-size:0.92rem;color:var(--text);}
@@ -247,6 +250,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .radio-item{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#f8f8f8;border-radius:10px;cursor:pointer;font-size:0.82rem;border:2px solid transparent;transition:var(--transition);}
 .radio-item.checked{background:var(--primary-light);border-color:var(--primary);color:var(--primary);font-weight:600;}
 .radio-item input{width:18px;height:18px;accent-color:var(--primary);pointer-events:none;}
+.about-section{margin-bottom:20px;}
+.about-section h3{font-size:0.95rem;font-weight:700;color:var(--primary);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.about-section p,.about-section li{font-size:0.82rem;color:#555;line-height:1.7;}
+.about-section ul{padding-left:20px;margin-top:4px;}
+.about-section li{margin-bottom:4px;}
+.about-section code{background:#f0f0f0;padding:1px 6px;border-radius:4px;font-size:0.75rem;color:#E65100;}
+.faq-item{margin-bottom:12px;padding:10px 12px;background:#f8f8f8;border-radius:10px;border-left:3px solid var(--primary);}
+.faq-q{font-weight:700;font-size:0.82rem;color:var(--text);margin-bottom:4px;}
+.faq-a{font-size:0.78rem;color:#666;line-height:1.6;}
+.editor-notes{background:linear-gradient(145deg,#FFF8E1,#FFECB3);padding:14px;border-radius:var(--radius-sm);border-left:4px solid #FF9800;margin-top:12px;white-space:pre-line;font-size:0.82rem;color:#6B4226;line-height:1.7;}
 @media (max-width:380px){.header-inner h1{font-size:1rem;}.nav-tab{font-size:0.65rem;padding:9px 2px;}.review-card .word-display{font-size:1.5rem;}.meaning-checkbox-item{padding:10px 12px;font-size:0.9rem;}.ds-word{font-size:0.85rem;}.settings-group label{font-size:0.78rem;}}
 </style>
 </head>
@@ -451,6 +464,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     </div>
 
     <div class="page" id="page-settings">
+        <!-- 👤 用户区 - 最顶部，最醒目 -->
+        <div class="user-hero">
+            <div class="label">当前用户</div>
+            <div class="name">👤 <span id="settingsUsername">-</span></div>
+            <div class="actions">
+                <button class="btn btn-sm btn-primary" onclick="openRenameUser()">✏️ 改名</button>
+                <button class="btn btn-sm btn-secondary" onclick="openSwitchUser()">🔄 切换</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteCurrentUser()">🗑️ 删除</button>
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-title"><span class="icon">⚙️</span> 复习设置</div>
             <div class="settings-group"><label>每日目标（个）</label><input type="number" id="settingsDailyGoal" min="1" max="200" value="20"></div>
@@ -527,21 +551,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
             </div>
         </div>
         <div class="card">
-            <div class="card-title"><span class="icon">👤</span> 当前用户</div>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-                <div class="user-badge">👤 <span id="settingsUsername">-</span></div>
-                <div style="display:flex;gap:6px;">
-                    <button class="btn btn-sm btn-secondary" onclick="openSwitchUser()">切换</button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteCurrentUser()">删除</button>
-                </div>
-            </div>
-        </div>
-        <div class="card">
             <div class="card-title"><span class="icon">📈</span> 统计信息</div>
             <div class="settings-group"><label>总复习次数</label><span id="statTotalReviews">0</span></div>
             <div class="settings-group"><label>总认识次数</label><span id="statTotalKnow">0</span></div>
             <div class="settings-group"><label>总忘记次数</label><span id="statTotalForgot">0</span></div>
             <div class="settings-group"><label>累计打卡天数</label><span id="statTotalCheckins">0</span></div>
+        </div>
+        <div class="card">
+            <div class="card-title"><span class="icon">ℹ️</span> 关于</div>
+            <div style="font-size:0.82rem;color:#666;line-height:1.6;margin-bottom:10px;">了解这个工具的功能、用法和常见问题</div>
+            <button class="btn btn-primary btn-sm" style="width:100%;" onclick="openAbout()">查看「关于」</button>
         </div>
     </div>
 </div>
@@ -549,6 +568,28 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 <div class="toast" id="toast"></div>
 
 <script>
+/* ═══════════════════════════════════════════════════════════════
+   📝 编者的话（EDITOR_NOTES）
+   
+   ⚠️ 每次更新代码时，修改下方这段文字即可。
+   在页面的「关于」页面最下方会显示出来，方便朋友看到更新内容。
+   
+   格式建议：
+   日期 · 更新内容
+   日期 · 更新内容
+   （每行一条，用换行分隔）
+   ═══════════════════════════════════════════════════════════════ */
+const EDITOR_NOTES = `
+hello哇，这个网址能做到今天，本主编是从未想过的。
+只是因为某天的灵感，想要背诵熟词僻义，于是请到了deepseek
+没想到，越改越觉得不足；越修改，越觉得少了点什么
+于是，这些功能就慢慢地发芽、成长
+注意！一定要在浏览器中使用哦！
+`;
+/* ═══════════════════════════════════════════════════════════════
+   编者的话结束（下方代码不用改）
+   ═══════════════════════════════════════════════════════════════ */
+
 const STORAGE_PREFIX='ebbinghaus_v3_';
 const USERS_LIST_KEY='ebbinghaus_users_list';
 const CURRENT_USER_KEY='ebbinghaus_current_user';
@@ -568,8 +609,7 @@ let currentTagFilter=null;
 let reviewTagId=null;
 let statsDays=7;
 
-// 标签管理状态
-let tagModalView='list'; // 'list' | 'detail' | 'addWords'
+let tagModalView='list';
 let tagModalCurrentId=null;
 let selectedWordIds=new Set();
 
@@ -685,11 +725,8 @@ function playSound(type){
     if(!appData||!appData.settings.soundEnabled)return;
     const ctx=ensureAudioCtx();
     if(!ctx)return;
-    if(ctx.state==='suspended'){
-        ctx.resume().then(()=>_playNow(ctx,type)).catch(()=>{});
-    }else{
-        _playNow(ctx,type);
-    }
+    if(ctx.state==='suspended'){ctx.resume().then(()=>_playNow(ctx,type)).catch(()=>{});}
+    else{_playNow(ctx,type);}
 }
 function onSoundToggle(){
     const enabled=document.getElementById('settingsSound').checked;
@@ -778,7 +815,73 @@ function confirmUsername(){
     renderAll();updateHeaderHeight();
 }
 document.getElementById('usernameInput').addEventListener('keydown',e=>{if(e.key==='Enter')confirmUsername();});
-function openSwitchUser(){if(reviewSessionActive){if(!confirm('正在背诵中，切换用户会丢失当前会话进度。确定切换吗？'))return;}openUserModal();}
+function openSwitchUser(){
+    if(reviewSessionActive){if(!confirm('正在背诵中，切换用户会丢失当前会话进度。确定切换吗？'))return;}
+    openUserModal();
+}
+function openRenameUser(){
+    if(!currentUser){showToast('未登录','error');return;}
+    openModal(`
+        <h2>✏️ 修改用户名</h2>
+        <p style="font-size:0.78rem;color:#666;">当前用户名：<b>${escapeHtml(currentUser)}</b></p>
+        <p style="font-size:0.72rem;color:#F44336;">⚠️ 改完后需要用新用户名登录（数据会自动迁移）</p>
+        <input type="text" id="renameInput" placeholder="新用户名" maxlength="20" autocomplete="off" value="${escapeAttr(currentUser)}">
+        <button class="btn btn-primary" onclick="confirmRename()">确定改名</button>
+        <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+    `);
+    setTimeout(()=>{const el=document.getElementById('renameInput');if(el){el.focus();el.select();}},100);
+}
+function confirmRename(){
+    const input=document.getElementById('renameInput');
+    const newName=input.value.trim();
+    if(!newName){showToast('请输入新用户名','error');return;}
+    if(newName===currentUser){showToast('用户名未改变','info');return;}
+    if(getUsersList().includes(newName)){showToast('该用户名已存在','error');return;}
+    const oldName=currentUser;
+    const oldKey=STORAGE_PREFIX+oldName;
+    const newKey=STORAGE_PREFIX+newName;
+    const oldSessionKey=SESSION_KEY_PREFIX+oldName;
+    const newSessionKey=SESSION_KEY_PREFIX+newName;
+    try{
+        // 迁移主数据
+        const raw=localStorage.getItem(oldKey);
+        if(raw!==null){
+            localStorage.setItem(newKey,raw);
+            localStorage.removeItem(oldKey);
+        }
+        // 迁移会话
+        const rawSession=localStorage.getItem(oldSessionKey);
+        if(rawSession!==null){
+            localStorage.setItem(newSessionKey,rawSession);
+            localStorage.removeItem(oldSessionKey);
+        }
+        // 迁移顺序偏好
+        const oldOrder=localStorage.getItem('ebbinghaus_order_'+oldName);
+        if(oldOrder!==null){
+            localStorage.setItem('ebbinghaus_order_'+newName,oldOrder);
+            localStorage.removeItem('ebbinghaus_order_'+oldName);
+        }
+        const oldTag=localStorage.getItem('ebbinghaus_tag_'+oldName);
+        if(oldTag!==null){
+            localStorage.setItem('ebbinghaus_tag_'+newName,oldTag);
+            localStorage.removeItem('ebbinghaus_tag_'+oldName);
+        }
+        // 更新用户列表
+        const list=getUsersList().filter(u=>u!==oldName);
+        if(!list.includes(newName))list.push(newName);
+        saveUsersList(list);
+        // 更新当前用户
+        localStorage.setItem(CURRENT_USER_KEY,newName);
+        currentUser=newName;
+        appData=loadData(newName);
+        closeModal();
+        renderAll();
+        showToast(`✅ 已改名为「${newName}」`,'success');
+    }catch(e){
+        console.error('改名失败',e);
+        showToast('改名失败：'+e.message,'error');
+    }
+}
 function deleteCurrentUser(){
     if(!currentUser)return;
     if(!confirm(`确定删除用户「${currentUser}」吗？所有单词和学习记录将永久丢失！`))return;
@@ -786,10 +889,11 @@ function deleteCurrentUser(){
     if(input!==currentUser){showToast('用户名不匹配，已取消','error');return;}
     const bkPrefix=STORAGE_PREFIX+currentUser+'_backup_';
     const toRemove=[];
-    for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(!k)continue;if(k===STORAGE_PREFIX+currentUser||k===SESSION_KEY_PREFIX+currentUser||k.startsWith(bkPrefix))toRemove.push(k);}
+    for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(!k)continue;if(k===STORAGE_PREFIX+currentUser||k===SESSION_KEY_PREFIX+currentUser||k.startsWith(bkPrefix)||k==='ebbinghaus_order_'+currentUser||k==='ebbinghaus_tag_'+currentUser)toRemove.push(k);}
     toRemove.forEach(k=>localStorage.removeItem(k));
     removeUserFromList(currentUser);localStorage.removeItem(CURRENT_USER_KEY);location.reload();
 }
+
 function renderAll(){
     document.getElementById('settingsUsername').textContent=currentUser||'-';
     document.getElementById('dailyGoalInput').value=appData.settings.dailyGoal||20;
@@ -850,12 +954,7 @@ function setReviewTagFromEvent(e){
     renderReviewTagSelector();updateReviewOverview();
 }
 
-/* ========== 标签管理（新版流程） ========== */
-function openTagManager(){
-    tagModalView='list';
-    tagModalCurrentId=null;
-    renderTagManagerModal();
-}
+function openTagManager(){tagModalView='list';tagModalCurrentId=null;renderTagManagerModal();}
 function renderTagManagerModal(){
     if(tagModalView==='list')renderTagListModal();
     else if(tagModalView==='detail')renderTagDetailModal();
@@ -864,10 +963,7 @@ function renderTagManagerModal(){
 function renderTagListModal(){
     const tags=appData.tags;
     const tagCardsHtml=tags.length?tags.map(t=>{
-        const activeCount=t.wordIds.filter(id=>{
-            const w=appData.words.find(x=>x.id===id);
-            return w&&!w.archived;
-        }).length;
+        const activeCount=t.wordIds.filter(id=>{const w=appData.words.find(x=>x.id===id);return w&&!w.archived;}).length;
         const totalCount=t.wordIds.length;
         const subText=activeCount===totalCount?`${totalCount} 个单词`:`${activeCount} 个可用 / 共 ${totalCount} 个`;
         return`<div class="tag-card" data-tag-id="${escapeAttr(t.id)}" onclick="openTagDetailFromEvent(event)">
@@ -878,17 +974,12 @@ function renderTagListModal(){
     openModal(`
         <h2>🏷️ 标签管理</h2>
         <p style="font-size:0.78rem;">标签用来分组单词，背诵时可按标签筛选。</p>
-        <div style="text-align:left;max-height:280px;overflow-y:auto;margin-bottom:12px;">
-            ${tagCardsHtml}
-        </div>
+        <div style="text-align:left;max-height:280px;overflow-y:auto;margin-bottom:12px;">${tagCardsHtml}</div>
         <button class="btn btn-primary" onclick="showCreateTagModal()">➕ 创建标签</button>
         <button class="btn btn-secondary" onclick="closeModal()">关闭</button>
     `);
 }
-function openTagDetailFromEvent(e){
-    const id=e.currentTarget.getAttribute('data-tag-id');
-    if(id)openTagDetail(id);
-}
+function openTagDetailFromEvent(e){const id=e.currentTarget.getAttribute('data-tag-id');if(id)openTagDetail(id);}
 function showCreateTagModal(){
     openModal(`
         <h2>➕ 创建标签</h2>
@@ -908,17 +999,11 @@ function confirmCreateTag(){
     appData.tags.push(newTag);
     saveData();
     renderTagFilterBar();renderReviewTagSelector();
-    // 直接进入该标签详情，方便加单词
-    tagModalView='detail';
-    tagModalCurrentId=newTag.id;
+    tagModalView='detail';tagModalCurrentId=newTag.id;
     renderTagManagerModal();
     showToast(`✅ 已创建「${name}」，现在可以添加单词`,'success');
 }
-function openTagDetail(id){
-    tagModalView='detail';
-    tagModalCurrentId=id;
-    renderTagManagerModal();
-}
+function openTagDetail(id){tagModalView='detail';tagModalCurrentId=id;renderTagManagerModal();}
 function renderTagDetailModal(){
     const t=appData.tags.find(x=>x.id===tagModalCurrentId);
     if(!t){openTagManager();return;}
@@ -936,9 +1021,7 @@ function renderTagDetailModal(){
     openModal(`
         <h2>🏷️ ${escapeHtml(t.name)}</h2>
         <p style="font-size:0.75rem;color:#999;margin-bottom:12px;">${activeCount} 个可用 / 共 ${wordsInTag.length} 个</p>
-        <div style="text-align:left;max-height:260px;overflow-y:auto;background:#f8f8f8;border-radius:10px;padding:8px;margin-bottom:12px;">
-            ${wordItemsHtml}
-        </div>
+        <div style="text-align:left;max-height:260px;overflow-y:auto;background:#f8f8f8;border-radius:10px;padding:8px;margin-bottom:12px;">${wordItemsHtml}</div>
         <button class="btn btn-primary" onclick="showAddWordsModal()">➕ 添加单词</button>
         <button class="btn btn-secondary" onclick="openTagManager()">返回列表</button>
         <button class="btn btn-danger" data-delete-tag="${escapeAttr(t.id)}" onclick="deleteTagFromEvent(event)">🗑️ 删除标签</button>
@@ -954,11 +1037,7 @@ function removeWordFromTagFromEvent(e){
     renderTagFilterBar();renderReviewTagSelector();renderWordList();
     renderTagDetailModal();
 }
-function showAddWordsModal(){
-    tagModalView='addWords';
-    selectedWordIds=new Set();
-    renderAddWordsModal();
-}
+function showAddWordsModal(){tagModalView='addWords';selectedWordIds=new Set();renderAddWordsModal();}
 function renderAddWordsModal(){
     const t=appData.tags.find(x=>x.id===tagModalCurrentId);
     if(!t){openTagManager();return;}
@@ -975,9 +1054,7 @@ function renderAddWordsModal(){
     openModal(`
         <h2>➕ 添加到「${escapeHtml(t.name)}」</h2>
         <div style="font-size:0.72rem;color:#999;margin-bottom:8px;">可添加 ${available.length} 个单词</div>
-        <div style="text-align:left;max-height:300px;overflow-y:auto;background:#f8f8f8;border-radius:10px;padding:8px;margin-bottom:12px;">
-            ${listHtml}
-        </div>
+        <div style="text-align:left;max-height:300px;overflow-y:auto;background:#f8f8f8;border-radius:10px;padding:8px;margin-bottom:12px;">${listHtml}</div>
         <button class="btn btn-primary" onclick="confirmAddWords()">确定添加</button>
         <button class="btn btn-secondary" onclick="openTagDetail('${escapeAttr(t.id)}')">返回</button>
     `);
@@ -987,15 +1064,8 @@ function toggleAddWordSelection(e){
     const label=e.currentTarget;
     const wId=label.getAttribute('data-word-id');
     const cb=label.querySelector('input');
-    if(selectedWordIds.has(wId)){
-        selectedWordIds.delete(wId);
-        cb.checked=false;
-        label.classList.remove('checked');
-    }else{
-        selectedWordIds.add(wId);
-        cb.checked=true;
-        label.classList.add('checked');
-    }
+    if(selectedWordIds.has(wId)){selectedWordIds.delete(wId);cb.checked=false;label.classList.remove('checked');}
+    else{selectedWordIds.add(wId);cb.checked=true;label.classList.add('checked');}
 }
 function confirmAddWords(){
     const t=appData.tags.find(x=>x.id===tagModalCurrentId);
@@ -1160,7 +1230,6 @@ function showWordDetail(id){
     const masteredCycles=appData.settings.masteredCycles||2;
     const dotsHtml=(w.history||[]).slice(-MAX_HISTORY_DOTS).map(h=>`<span class="history-dot ${h.r==='know'?'know':'forgot'}"></span>`).join('')||'<span style="font-size:0.72rem;color:#999;">暂无记录</span>';
     const archiveInfo=isArchived(w)?`<div style="margin-top:6px;padding:6px 10px;background:var(--archive-light);border-radius:8px;font-size:0.72rem;color:var(--archive);">📦 已归档（${w.archivedDate||'—'}）· 不参与复习</div>`:'';
-    // 当前标签
     const currentTags=appData.tags.filter(t=>t.wordIds.includes(w.id));
     const tagChips=currentTags.length?currentTags.map(t=>`<span style="display:inline-block;padding:3px 9px;background:var(--primary-light);color:var(--primary);border-radius:10px;font-size:0.72rem;font-weight:600;margin:2px;">${escapeHtml(t.name)}</span>`).join(''):'<span style="font-size:0.75rem;color:#999;">未加入任何标签</span>';
     openModal(`
@@ -1571,6 +1640,138 @@ function applyImportedData(text){
     }catch(e){showToast('导入失败：'+e.message,'error');}
 }
 
+/* ===== 关于页面 ===== */
+function openAbout(){
+    const notesHtml=EDITOR_NOTES.trim().split('\n').map(line=>escapeHtml(line)).join('<br>');
+    openModal(`
+        <div style="text-align:left;">
+            <h2 style="text-align:center;margin-bottom:4px;">📖 关于「记忆单词」</h2>
+            <p style="text-align:center;font-size:0.72rem;color:#999;margin-bottom:18px;">v3 · 艾宾浩斯遗忘曲线背诵系统</p>
+
+            <div class="about-section">
+                <h3>🎯 这是什么？</h3>
+                <p>一个完全离线的单词记忆工具，基于<b>艾宾浩斯遗忘曲线</b>自动安排复习时间，帮助你长期记住单词。</p>
+                <p style="margin-top:6px;">所有数据存在你自己的浏览器里，<b>不上传服务器，不泄露隐私</b>，也不需要注册账号。</p>
+            </div>
+
+            <div class="about-section">
+                <h3>✨ 主要功能</h3>
+                <ul>
+                    <li><b>单词库</b>：单个/批量添加，一个词可写多个释义（分号分隔），支持标签分类</li>
+                    <li><b>智能复习</b>：基于遗忘曲线自动计算下次复习日，认识推进、忘记回退</li>
+                    <li><b>自定义曲线</b>：默认 1,2,4,7,15,30 天，可自行调整</li>
+                    <li><b>多释义检验</b>：多义词逐条勾选，未勾选的会再次出现</li>
+                    <li><b>助记</b>：可为每个词添加句子、谐音、词根、短语等提示</li>
+                    <li><b>撤销</b>：误点"认识/忘记"可回退一步</li>
+                    <li><b>音效</b>：认识/忘记有声音反馈，可关</li>
+                    <li><b>打卡</b>：连续打卡天数、最近 7 天日历</li>
+                    <li><b>统计</b>：完成量趋势、认识率趋势、最易忘 TOP 10</li>
+                    <li><b>多用户</b>：数据互相隔离，可改名、切换、删除</li>
+                    <li><b>备份</b>：导出/导入 JSON，换手机不丢</li>
+                </ul>
+            </div>
+
+            <div class="about-section">
+                <h3>🚀 快速上手</h3>
+                <ul>
+                    <li><b>首次使用</b>：输入用户名进入</li>
+                    <li><b>添加单词</b>：点"➕ 添加单词"或"📥 批量添加"</li>
+                    <li><b>批量格式</b>：<code>abandon = 放纵；陷入；沉湎于</code></li>
+                    <li><b>创建标签</b>：设置 → 标签管理 → 创建标签 → 加单词</li>
+                    <li><b>开始背诵</b>：先看英文，点卡片翻转看释义，勾选认识的部分</li>
+                    <li><b>完成目标</b>：自动打卡</li>
+                </ul>
+            </div>
+
+            <div class="about-section">
+                <h3>💡 助记小技巧</h3>
+                <p>助记可以是任何让你更容易记住的形式：</p>
+                <ul>
+                    <li><b>句子</b>：<code>I will abandon the plan.</code>（把这个词放进句子里）</li>
+                    <li><b>短语</b>：<code>abandon oneself to</code>（沉湎于）</li>
+                    <li><b>谐音</b>：<code>"额办等" → 我等着被抛弃</code></li>
+                    <li><b>词根</b>：<code>ab-（离开）+ andon（给）→ 把东西交出去 → 放弃</code></li>
+                    <li><b>进阶</b>：<code>abandon = 放弃，比 give up 更正式；名词形式 abandonment</code></li>
+                    <li><b>联想</b>：<code>a-ban-don → 一个禁止的驴 → 被抛弃的</code></li>
+                </ul>
+            </div>
+
+            <div class="about-section">
+                <h3>⚠️ 常见问题</h3>
+                <div class="faq-item">
+                    <div class="faq-q">Q1：换手机后数据丢了？</div>
+                    <div class="faq-a">数据存在浏览器本地，不会自动同步。请提前在"设置 → 数据备份"里<b>导出</b>，新设备上<b>导入</b>即可。</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Q2：清缓存后数据没了？</div>
+                    <div class="faq-a">清缓存会清除浏览器本地存储。请<b>定期导出备份</b>。</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Q3：复习日期和我想的不一样？</div>
+                    <div class="faq-a">复习日期由当前阶段和遗忘曲线决定。忘记一个词会回退一个阶段，日期提前。可在"设置 → 遗忘曲线设置"查看和修改。</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Q4：多释义单词为什么要勾选？</div>
+                    <div class="faq-a">一个词有多个意思，全部认识才算掌握。勾选你记住的，未勾选的会在稍后再次出现，直到全记住。如果全忘了，点"忘记"即可。</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Q5：怎么改名？</div>
+                    <div class="faq-a">设置 → 顶部"当前用户" → "✏️ 改名"。数据会自动迁移，改完后用新名字登录。</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Q6：怎么删除用户？</div>
+                    <div class="faq-a">设置 → 顶部"删除"，需输入用户名二次确认。<b>删除后数据不可恢复</b>，建议先导出备份。</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Q7：能把词库分享给朋友吗？</div>
+                    <div class="faq-a">可以。导出 JSON 文件发给朋友，让他在"设置 → 数据备份 → 导入"里导入即可。</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Q8：音效没声音？</div>
+                    <div class="faq-a">浏览器要求先和页面交互才能播放声音。<b>第一次点击页面任意位置后</b>，音效就会正常工作。也可在"设置 → 体验"里关闭。</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Q9：每天背不完怎么办？</div>
+                    <div class="faq-a">每日目标可以调小。没打卡的日子，到期单词会在下次打开时累积，慢慢补即可。</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Q10：删除和归档的区别？</div>
+                    <div class="faq-a"><b>彻底删除</b>：从词库移除，标签关联也删；<b>归档保留</b>：不复习但保留在词库和标签中，可在"已归档"筛选里查看。</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Q11：为什么同一个词被背好几遍？</div>
+                    <div class="faq-a">这是设计。第一次认识后按 1、2、4、7、15、30 天间隔复习，完成 2 个循环才算"已掌握"（默认）。可在设置里调整。</div>
+                </div>
+            </div>
+
+            <div class="about-section">
+                <h3>🔒 隐私说明</h3>
+                <ul>
+                    <li>所有数据仅存于浏览器 localStorage，<b>不上传任何服务器</b></li>
+                    <li>无账号系统、无追踪、无广告</li>
+                    <li>唯一外部依赖是 Web Audio API（音效），不联网</li>
+                    <li>换设备、清缓存数据会丢，<b>定期导出备份</b></li>
+                </ul>
+            </div>
+
+            <div class="about-section">
+                <h3>💡 小技巧</h3>
+                <ul>
+                    <li>多个释义用分号 <code>；</code> 或 <code>;</code> 分隔，背诵时自动变成勾选项</li>
+                    <li>标签可在"背诵"页快速筛选</li>
+                    <li>键盘快捷键：空格翻开卡片、<code>1</code> 认识、<code>2</code> 忘记、<code>Z</code> 撤销</li>
+                </ul>
+            </div>
+
+            <div class="about-section">
+                <h3>📝 编者的话</h3>
+                <div class="editor-notes">${notesHtml}</div>
+            </div>
+        </div>
+        <button class="btn btn-secondary" onclick="closeModal()" style="margin-top:16px;">关闭</button>
+    `);
+}
+
 function getWordById(id){return appData.words.find(w=>w.id===id);}
 function checkResumeSession(){
     const banner=document.getElementById('resumeSessionBanner');
@@ -1737,7 +1938,7 @@ function showCurrentWord(){
     const tip=document.getElementById('reviewTip');
     const intervals=getIntervals();const streakReq=getStreakRequired();
     if(entry.forgot){tip.textContent=`⚠️ 已标记忘记，需连续 ${streakReq} 次「认识」（当前 ${entry.streak}/${streakReq}）`;}
-    else if(isCheckboxMode){tip.textContent='💡 勾选你记住的释义，未勾选的会再出现';}
+    else if(isCheckboxMode){tip.textContent='💡 勾选你记住的释义，未勾选的会再出现；全忘了点"忘记"';}
     else{const cycleInfo=(word.cycleCount||0)>0?`（第${(word.cycleCount||0)+1}轮）`:'';tip.textContent=`当前阶段 ${word.stage}/${intervals.length} ${cycleInfo}`;}
     updateButtons();
     updateUndoButton();
@@ -1765,11 +1966,13 @@ function updateButtons(){
         const boxes=document.getElementById('reviewMeaning').querySelectorAll('.meaning-checkbox');
         let checkedCount=0;
         boxes.forEach(cb=>{if(cb.checked)checkedCount++;});
-        btnForgot.style.display='none';
+        // 多释义模式：忘记按钮也显示（用于"全忘记"）
+        btnForgot.style.display='flex';
+        btnForgot.disabled=!revealed;
         if(!revealed||checkedCount===0){
             btnKnow.disabled=true;
             btnKnow.classList.add('gray');
-            hint.textContent=revealed?'请勾选你记住的释义':'点击卡片查看释义';
+            hint.textContent=revealed?(checkedCount===0?'一个都没想起来？点"忘记"':''):'点击卡片查看释义';
         }else{
             btnKnow.disabled=false;
             btnKnow.classList.remove('gray');
@@ -1851,7 +2054,7 @@ function undoLast(){
 }
 function markKnow(){
     if(!reviewQueue.length)return;
-    playSound('know'); // 每次点击立即播放
+    playSound('know');
     takeSnapshot();
     const entry=reviewQueue[0];const word=getWordById(entry.wordId);
     if(!word){reviewQueue.shift();showCurrentWord();return;}
@@ -1891,13 +2094,7 @@ function markKnow(){
 }
 function markForgot(){
     if(!reviewQueue.length)return;
-    const entry0=reviewQueue[0];
-    const word0=getWordById(entry0.wordId);
-    if(word0){
-        const activeIdxs0=entry0.activeMeanings||word0.meanings.map((_,i)=>i);
-        if(activeIdxs0.length>1)return;
-    }
-    playSound('forgot'); // 每次点击立即播放
+    playSound('forgot');
     takeSnapshot();
     const entry=reviewQueue[0];const word=getWordById(entry.wordId);
     if(!word){reviewQueue.shift();showCurrentWord();return;}
@@ -2040,9 +2237,7 @@ function startExtraReview(){
     if(pool.length===0){closeModal();showToast('今天已经没有未背过的单词了','info');return;}
     let actualCount=n;
     if(n>pool.length){
-        if(!confirm(`当前仅剩 ${pool.length} 个单词，是否继续？（将背诵全部 ${pool.length} 个）`)){
-            return;
-        }
+        if(!confirm(`当前仅剩 ${pool.length} 个单词，是否继续？（将背诵全部 ${pool.length} 个）`)){return;}
         actualCount=pool.length;
     }
     closeModal();
