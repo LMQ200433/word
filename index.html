@@ -690,6 +690,16 @@ function debouncedRender(){clearTimeout(searchDebounceTimer);searchDebounceTimer
 function updateHeaderHeight(){const h=document.querySelector('.app-header');if(!h)return;document.documentElement.style.setProperty('--header-h',h.offsetHeight+'px');}
 window.addEventListener('resize',updateHeaderHeight);
 
+let reviewQueue=[];
+let initialQueueSize=0;
+let completedWordIds=new Set();
+let forgottenWordIds=new Set();
+let reviewStats={know:0,forgot:0};
+let todaySummary=[];
+let reviewSessionActive=false;
+let sessionStartGoal=0;
+let lastAction=null;
+
 function resetSessionState(){
     reviewQueue=[];reviewStats={know:0,forgot:0};completedWordIds=new Set();forgottenWordIds=new Set();
     todaySummary=[];initialQueueSize=0;reviewSessionActive=false;sessionStartGoal=0;
@@ -794,7 +804,6 @@ function switchPage(name){
     if(name==='stats'){renderStatsPage();}
 }
 
-/* ===== 标签：计数只算未归档 ===== */
 function renderTagFilterBar(){
     const bar=document.getElementById('tagFilterBar');
     if(!appData.tags.length){bar.innerHTML='';return;}
@@ -1440,16 +1449,6 @@ function applyImportedData(text){
     }catch(e){showToast('导入失败：'+e.message,'error');}
 }
 
-let reviewQueue=[];
-let initialQueueSize=0;
-let completedWordIds=new Set();
-let forgottenWordIds=new Set();
-let reviewStats={know:0,forgot:0};
-let todaySummary=[];
-let reviewSessionActive=false;
-let sessionStartGoal=0;
-let lastAction=null;
-
 function getWordById(id){return appData.words.find(w=>w.id===id);}
 function checkResumeSession(){
     const banner=document.getElementById('resumeSessionBanner');
@@ -1843,4 +1842,148 @@ function finishReview(){
 function confirmComplete(){
     document.getElementById('reviewComplete').classList.remove('show');
     document.getElementById('startReviewBtn').style.display='flex';
-    document.querySelectorAll('#page-review .card').forEach(c=>c.style.display='
+    document.querySelectorAll('#page-review .card').forEach(c=>c.style.display='block');
+    document.getElementById('progressBar').style.width='0%';
+    document.getElementById('progressText').textContent='0/0';
+    reviewQueue=[];reviewStats={know:0,forgot:0};
+    completedWordIds=new Set();forgottenWordIds=new Set();
+    todaySummary=[];initialQueueSize=0;sessionStartGoal=0;
+    lastAction=null;updateUndoButton();
+    updateReviewOverview();
+    showToast('✅ 今日任务已确认完成','success');
+}
+function openExtraReview(){
+    const todayIds=new Set(getDailyRecordsToday());
+    const tag=reviewTagId?appData.tags.find(t=>t.id===reviewTagId):null;
+    const inScope=w=>!tag||tag.wordIds.includes(w.id);
+    const pool=appData.words.filter(w=>!isArchived(w)&&inScope(w)&&!isMastered(w)&&!todayIds.has(w.id));
+    if(pool.length===0){showToast('今天已经没有未背过的单词了','info');return;}
+    openModal(`
+        <h2>➕ 额外背诵</h2>
+        <p>从今天还没背过的单词中抽取${tag?`<br><span style="color:#5B6ABF;font-size:0.75rem;">范围：${escapeHtml(tag.name)}</span>`:''}</p>
+        <p style="font-size:0.75rem;color:#999;">今天剩余可背：<b style="color:var(--primary);">${pool.length}</b> 个</p>
+        <div class="extra-input-row"><input type="number" id="extraCount" min="1" max="9999" value="${Math.min(10,pool.length)}"></div>
+        <button class="btn btn-primary" style="margin-top:10px;" onclick="startExtraReview()">开始背诵</button>
+        <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+    `);
+    setTimeout(()=>document.getElementById('extraCount').focus(),100);
+}
+function startExtraReview(){
+    const input=document.getElementById('extraCount');
+    const n=parseInt(input.value);
+    if(isNaN(n)||n<1){showToast('请输入有效数字','error');return;}
+    const todayIds=new Set(getDailyRecordsToday());
+    const tag=reviewTagId?appData.tags.find(t=>t.id===reviewTagId):null;
+    const inScope=w=>!tag||tag.wordIds.includes(w.id);
+    const pool=appData.words.filter(w=>!isArchived(w)&&inScope(w)&&!isMastered(w)&&!todayIds.has(w.id));
+    if(pool.length===0){closeModal();showToast('今天已经没有未背过的单词了','info');return;}
+    let actualCount=n;
+    if(n>pool.length){
+        if(!confirm(`当前仅剩 ${pool.length} 个单词，是否继续？（将背诵全部 ${pool.length} 个）`)){
+            return;
+        }
+        actualCount=pool.length;
+    }
+    closeModal();
+    document.getElementById('reviewComplete').classList.remove('show');
+    document.querySelectorAll('#page-review .card').forEach(c=>c.style.display='block');
+    document.getElementById('startReviewBtn').style.display='flex';
+    startExtraReviewWithCount(actualCount);
+}
+function startExtraReviewWithCount(n){
+    if(reviewSessionActive)return;
+    const tag=reviewTagId?appData.tags.find(t=>t.id===reviewTagId):null;
+    const inScope=w=>!tag||tag.wordIds.includes(w.id);
+    const todayIds=new Set(getDailyRecordsToday());
+    const pool=appData.words.filter(w=>!isArchived(w)&&inScope(w)&&!isMastered(w)&&!todayIds.has(w.id));
+    const shuffled=[...pool].sort(()=>Math.random()-0.5);
+    const picked=shuffled.slice(0,n);
+    if(!picked.length){showToast('没有可背诵的单词','error');return;}
+    recordToday(picked.map(w=>w.id));
+    saveData();
+    let ordered;
+    if(currentOrder==='sequential')ordered=[...picked].sort((a,b)=>a.word.localeCompare(b.word));
+    else ordered=[...picked].sort(()=>Math.random()-0.5);
+    reviewQueue=ordered.map(w=>({wordId:w.id,streak:0,forgot:false,activeMeanings:null}));
+    initialQueueSize=reviewQueue.length;
+    completedWordIds=new Set();forgottenWordIds=new Set();
+    reviewStats={know:0,forgot:0};todaySummary=[];
+    lastAction=null;updateUndoButton();
+    reviewSessionActive=true;
+    sessionStartGoal=0;
+    document.getElementById('resumeSessionBanner').style.display='none';
+    document.getElementById('startReviewBtn').style.display='none';
+    document.querySelectorAll('#page-review .card').forEach(c=>c.style.display='none');
+    document.getElementById('reviewComplete').classList.remove('show');
+    document.getElementById('reviewMode').classList.add('show');
+    saveSession();showCurrentWord();window.scrollTo({top:0,behavior:'smooth'});
+}
+function updateSettingsPage(){
+    document.getElementById('settingsUsername').textContent=currentUser||'-';
+    setInputIfNotFocused('settingsDailyGoal',appData.settings.dailyGoal||20);
+    setInputIfNotFocused('settingsDeleteThreshold',appData.settings.deleteThresholdDays||30);
+    setInputIfNotFocused('settingsMasteredCycles',appData.settings.masteredCycles||2);
+    setInputIfNotFocused('settingsStreakRequired',appData.settings.streakRequired||3);
+    setInputIfNotFocused('settingsIntervals',getIntervals().join(','));
+    document.getElementById('settingsAutoDelete').checked=!!appData.settings.autoDeleteEnabled;
+    document.getElementById('settingsSound').checked=appData.settings.soundEnabled!==false;
+    setInputIfNotFocused('settingsAutoDeleteCycles',appData.settings.autoDeleteCycles||3);
+    applyAutoDeleteVisibility();renderArchiveModeRadio();
+    renderIntervalPreview();
+    document.getElementById('streakCount').textContent=calculateStreak();
+    const last=appData.checkIns.length?appData.checkIns[appData.checkIns.length-1]:'尚未打卡';
+    document.getElementById('lastCheckinDate').textContent=`最近：${last}`;
+    document.getElementById('statTotalReviews').textContent=appData.stats.totalReviews||0;
+    document.getElementById('statTotalKnow').textContent=appData.stats.totalKnow||0;
+    document.getElementById('statTotalForgot').textContent=appData.stats.totalForgot||0;
+    document.getElementById('statTotalCheckins').textContent=appData.checkIns.length;
+    const btn=document.getElementById('checkinBtn');
+    if(isTodayCheckedIn()){btn.textContent='✅ 已打卡';btn.classList.add('done');btn.disabled=true;}
+    else{btn.textContent='📅 打卡';btn.classList.remove('done');btn.disabled=false;}
+}
+document.addEventListener('keydown',e=>{
+    if(!document.getElementById('reviewMode').classList.contains('show'))return;
+    const tag=(document.activeElement&&document.activeElement.tagName)||'';
+    if(tag==='INPUT'||tag==='TEXTAREA')return;
+    if(e.key===' '||e.key==='Enter'){e.preventDefault();const card=document.getElementById('reviewCard');if(!card.classList.contains('revealed'))revealCard();}
+    else if(e.key==='1'||e.key==='k'||e.key==='K'){e.preventDefault();if(!document.getElementById('btnKnow').disabled)markKnow();}
+    else if(e.key==='2'||e.key==='f'||e.key==='F'){e.preventDefault();if(!document.getElementById('btnForgot').disabled)markForgot();}
+    else if(e.key==='z'||e.key==='Z'){e.preventDefault();if(!document.getElementById('btnUndo').disabled)undoLast();}
+});
+document.getElementById('inputMeaning').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addWord();}});
+document.getElementById('inputWord').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('inputMeaning').focus();}});
+document.getElementById('mnemonicInput').addEventListener('input',saveMnemonicDebounced);
+document.getElementById('mnemonicInput').addEventListener('blur',()=>{
+    if(!reviewQueue.length)return;
+    const entry=reviewQueue[0];const word=getWordById(entry.wordId);if(!word)return;
+    const newM=document.getElementById('mnemonicInput').value.trim();
+    if(word.mnemonic!==newM){word.mnemonic=newM;saveData();}
+});
+document.getElementById('settingsIntervals').addEventListener('input',function(){
+    const iv=parseIntervals(this.value);
+    if(iv){const preview=document.getElementById('intervalPreview');const maxIdx=iv.length-1;preview.innerHTML=iv.map((d,i)=>`<span class="interval-chip ${i===maxIdx?'max':''}">${d}天${i===maxIdx?' ↻':''}</span>`).join('');}
+});
+window.addEventListener('beforeunload',()=>{
+    if(reviewSessionActive){
+        if(reviewQueue.length){
+            const entry=reviewQueue[0];const word=getWordById(entry.wordId);
+            if(word){const input=document.getElementById('mnemonicInput');if(input){const newM=input.value.trim();if(word.mnemonic!==newM){word.mnemonic=newM;saveData();}}}
+        }
+        saveSession();
+    }
+});
+bootstrap();
+setInterval(()=>{
+    if(!currentUser||!appData)return;
+    updateHeaderStats();
+    const active=document.activeElement;
+    const isTyping=active&&(active.tagName==='INPUT'||active.tagName==='TEXTAREA');
+    if(!isTyping){
+        if(document.getElementById('page-review').classList.contains('active'))updateReviewOverview();
+        if(document.getElementById('page-settings').classList.contains('active')){updateSettingsPage();updateWeekCalendar();}
+        if(document.getElementById('page-stats').classList.contains('active'))renderStatsPage();
+    }
+},60000);
+</script>
+</body>
+</html>
