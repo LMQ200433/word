@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>记忆单词 · 艾宾浩斯</title>
+<title>仅此一家</title>
 <style>
 :root{--primary:#5B6ABF;--primary-dark:#4A56A8;--primary-light:#E8EBF7;--success:#4CAF50;--success-light:#E8F5E9;--danger:#F44336;--danger-light:#FFEBEE;--warning:#FF9800;--warning-light:#FFF3E0;--archive:#78909C;--archive-light:#ECEFF1;--text:#1A1A2E;--text-secondary:#6B7280;--bg:#F5F6FA;--card-bg:#FFFFFF;--shadow:0 8px 25px rgba(0,0,0,0.06);--radius:20px;--radius-sm:12px;--transition:all 0.25s cubic-bezier(0.4,0,0.2,1);--font:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--header-h:62px;}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -214,10 +214,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .tag-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:16px;background:#f0f0f0;color:var(--text-secondary);font-size:0.75rem;font-weight:600;cursor:pointer;transition:var(--transition);border:2px solid transparent;}
 .tag-pill.active{background:var(--primary-light);color:var(--primary);border-color:var(--primary);}
 .tag-pill .count{background:rgba(0,0,0,0.1);border-radius:10px;padding:0 6px;font-size:0.65rem;}
-.tag-checkbox-list{display:flex;flex-direction:column;gap:6px;margin-top:8px;max-height:180px;overflow-y:auto;}
-.tag-checkbox-item{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f8f8f8;border-radius:8px;cursor:pointer;font-size:0.82rem;}
-.tag-checkbox-item input{width:18px;height:18px;accent-color:var(--primary);pointer-events:none;}
-.tag-checkbox-item.checked{background:var(--primary-light);color:var(--primary);font-weight:600;}
+/* 标签管理新样式 */
+.tag-card{padding:12px 14px;background:white;border-radius:10px;border:2px solid #e5e7eb;margin-bottom:8px;cursor:pointer;transition:var(--transition);text-align:left;}
+.tag-card:hover,.tag-card:active{border-color:var(--primary);background:var(--primary-light);}
+.tag-card-name{font-weight:700;font-size:0.92rem;color:var(--text);}
+.tag-card-sub{font-size:0.72rem;color:#999;margin-top:3px;}
+.tag-word-item{display:flex;align-items:center;padding:8px 10px;border-bottom:1px solid #f0f0f0;gap:8px;}
+.tag-word-item:last-child{border-bottom:none;}
+.add-word-checkbox{display:flex;align-items:center;gap:10px;padding:10px 12px;background:white;border-radius:8px;border:2px solid #e5e7eb;margin-bottom:6px;cursor:pointer;transition:var(--transition);}
+.add-word-checkbox.checked{background:var(--primary-light);border-color:var(--primary);}
+.add-word-checkbox input{width:20px;height:20px;accent-color:var(--primary);pointer-events:none;flex-shrink:0;margin:0;}
 .chart-bars{display:flex;align-items:flex-end;gap:4px;height:120px;padding:8px 4px 0;border-bottom:1px solid #e5e7eb;margin-top:8px;}
 .chart-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;position:relative;}
 .chart-bar{width:100%;background:linear-gradient(180deg,var(--primary),#7B5BBF);border-radius:6px 6px 0 0;min-height:2px;transition:height 0.4s ease;position:relative;}
@@ -562,6 +568,11 @@ let currentTagFilter=null;
 let reviewTagId=null;
 let statsDays=7;
 
+// 标签管理状态
+let tagModalView='list'; // 'list' | 'detail' | 'addWords'
+let tagModalCurrentId=null;
+let selectedWordIds=new Set();
+
 let reviewQueue=[];
 let initialQueueSize=0;
 let completedWordIds=new Set();
@@ -649,7 +660,6 @@ function isMastered(w){return(w.cycleCount||0)>=(appData.settings.masteredCycles
 function isArchived(w){return!!w.archived;}
 function getStreakRequired(){return appData.settings.streakRequired||3;}
 
-/* ==== 音效（修复触发问题）==== */
 let audioCtx=null;
 function ensureAudioCtx(){
     if(!audioCtx){try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){console.warn('AudioContext不可用',e);}}
@@ -687,7 +697,6 @@ function onSoundToggle(){
     if(enabled){ensureAudioCtx();playSound('know');}
     showToast(enabled?'🔊 音效已开启':'🔇 音效已关闭','info');
 }
-// 首次交互激活 AudioContext
 document.addEventListener('touchstart',()=>{ensureAudioCtx();},{once:true,passive:true});
 document.addEventListener('click',()=>{ensureAudioCtx();},{once:true});
 
@@ -840,44 +849,179 @@ function setReviewTagFromEvent(e){
     if(currentUser)localStorage.setItem('ebbinghaus_tag_'+currentUser,id||'');
     renderReviewTagSelector();updateReviewOverview();
 }
+
+/* ========== 标签管理（新版流程） ========== */
 function openTagManager(){
-    const tagListHtml=appData.tags.length?appData.tags.map(t=>`
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-bottom:1px solid #f3f4f6;font-size:0.85rem;">
-            <span><b>${escapeHtml(t.name)}</b> <span style="color:#999;font-size:0.75rem;">${t.wordIds.length} 词</span></span>
-            <button class="btn btn-sm btn-danger" data-del-tag="${escapeAttr(t.id)}" onclick="deleteTagFromEvent(event)">删除</button>
-        </div>`).join(''):'<div style="color:#999;font-size:0.82rem;padding:12px;text-align:center;">还没有标签</div>';
+    tagModalView='list';
+    tagModalCurrentId=null;
+    renderTagManagerModal();
+}
+function renderTagManagerModal(){
+    if(tagModalView==='list')renderTagListModal();
+    else if(tagModalView==='detail')renderTagDetailModal();
+    else if(tagModalView==='addWords')renderAddWordsModal();
+}
+function renderTagListModal(){
+    const tags=appData.tags;
+    const tagCardsHtml=tags.length?tags.map(t=>{
+        const activeCount=t.wordIds.filter(id=>{
+            const w=appData.words.find(x=>x.id===id);
+            return w&&!w.archived;
+        }).length;
+        const totalCount=t.wordIds.length;
+        const subText=activeCount===totalCount?`${totalCount} 个单词`:`${activeCount} 个可用 / 共 ${totalCount} 个`;
+        return`<div class="tag-card" data-tag-id="${escapeAttr(t.id)}" onclick="openTagDetailFromEvent(event)">
+            <div class="tag-card-name">🏷️ ${escapeHtml(t.name)}</div>
+            <div class="tag-card-sub">${subText}</div>
+        </div>`;
+    }).join(''):'<div style="color:#999;text-align:center;padding:20px;font-size:0.85rem;">还没有标签<br><span style="font-size:0.72rem;">点击下方按钮创建</span></div>';
     openModal(`
         <h2>🏷️ 标签管理</h2>
-        <p>标签用来分组单词，背诵时可按标签筛选。一个单词可以属于多个标签。</p>
-        <div style="text-align:left;background:#f8f8f8;border-radius:10px;padding:8px;margin-bottom:12px;max-height:200px;overflow-y:auto;">${tagListHtml}</div>
-        <div style="display:flex;gap:8px;">
-            <input type="text" id="newTagName" placeholder="新标签名称" maxlength="20" style="margin-bottom:0;">
-            <button class="btn btn-primary" onclick="createTag()" style="flex-shrink:0;">创建</button>
+        <p style="font-size:0.78rem;">标签用来分组单词，背诵时可按标签筛选。</p>
+        <div style="text-align:left;max-height:280px;overflow-y:auto;margin-bottom:12px;">
+            ${tagCardsHtml}
         </div>
+        <button class="btn btn-primary" onclick="showCreateTagModal()">➕ 创建标签</button>
         <button class="btn btn-secondary" onclick="closeModal()">关闭</button>
     `);
 }
-function createTag(){
-    const input=document.getElementById('newTagName');const name=input.value.trim();
-    if(!name){showToast('请输入标签名','error');return;}
+function openTagDetailFromEvent(e){
+    const id=e.currentTarget.getAttribute('data-tag-id');
+    if(id)openTagDetail(id);
+}
+function showCreateTagModal(){
+    openModal(`
+        <h2>➕ 创建标签</h2>
+        <p style="font-size:0.78rem;">给标签起个名字，比如"四级词汇"、"日常口语"</p>
+        <input type="text" id="newTagName" placeholder="输入标签名称" maxlength="20" autocomplete="off">
+        <button class="btn btn-primary" onclick="confirmCreateTag()">确定创建</button>
+        <button class="btn btn-secondary" onclick="openTagManager()">返回</button>
+    `);
+    setTimeout(()=>{const el=document.getElementById('newTagName');if(el)el.focus();},100);
+}
+function confirmCreateTag(){
+    const input=document.getElementById('newTagName');
+    const name=input.value.trim();
+    if(!name){showToast('请输入标签名称','error');return;}
     if(appData.tags.some(t=>t.name===name)){showToast('标签已存在','error');return;}
-    appData.tags.push({id:genId(),name,wordIds:[]});saveData();
-    input.value='';closeModal();openTagManager();
+    const newTag={id:genId(),name,wordIds:[]};
+    appData.tags.push(newTag);
+    saveData();
     renderTagFilterBar();renderReviewTagSelector();
-    showToast(`✅ 已创建「${name}」`,'success');
+    // 直接进入该标签详情，方便加单词
+    tagModalView='detail';
+    tagModalCurrentId=newTag.id;
+    renderTagManagerModal();
+    showToast(`✅ 已创建「${name}」，现在可以添加单词`,'success');
+}
+function openTagDetail(id){
+    tagModalView='detail';
+    tagModalCurrentId=id;
+    renderTagManagerModal();
+}
+function renderTagDetailModal(){
+    const t=appData.tags.find(x=>x.id===tagModalCurrentId);
+    if(!t){openTagManager();return;}
+    const wordsInTag=appData.words.filter(w=>t.wordIds.includes(w.id));
+    const activeCount=wordsInTag.filter(w=>!w.archived).length;
+    const wordItemsHtml=wordsInTag.length?wordsInTag.map(w=>`
+        <div class="tag-word-item">
+            <div style="flex:1;min-width:0;">
+                <div style="font-weight:700;font-size:0.88rem;color:${w.archived?'#78909C':'var(--text)'};">${escapeHtml(w.word)}${w.archived?' 📦':''}</div>
+                <div style="font-size:0.72rem;color:#999;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(w.meaning)}</div>
+            </div>
+            <button class="delete-btn" data-remove-word="${escapeAttr(w.id)}" onclick="removeWordFromTagFromEvent(event)">✕</button>
+        </div>
+    `).join(''):'<div style="color:#999;text-align:center;padding:20px;font-size:0.82rem;">这个标签还没有单词<br><span style="font-size:0.72rem;">点击下方"添加单词"</span></div>';
+    openModal(`
+        <h2>🏷️ ${escapeHtml(t.name)}</h2>
+        <p style="font-size:0.75rem;color:#999;margin-bottom:12px;">${activeCount} 个可用 / 共 ${wordsInTag.length} 个</p>
+        <div style="text-align:left;max-height:260px;overflow-y:auto;background:#f8f8f8;border-radius:10px;padding:8px;margin-bottom:12px;">
+            ${wordItemsHtml}
+        </div>
+        <button class="btn btn-primary" onclick="showAddWordsModal()">➕ 添加单词</button>
+        <button class="btn btn-secondary" onclick="openTagManager()">返回列表</button>
+        <button class="btn btn-danger" data-delete-tag="${escapeAttr(t.id)}" onclick="deleteTagFromEvent(event)">🗑️ 删除标签</button>
+    `);
+}
+function removeWordFromTagFromEvent(e){
+    e.stopPropagation();
+    const wId=e.currentTarget.getAttribute('data-remove-word');
+    const t=appData.tags.find(x=>x.id===tagModalCurrentId);
+    if(!t||!wId)return;
+    t.wordIds=t.wordIds.filter(id=>id!==wId);
+    saveData();
+    renderTagFilterBar();renderReviewTagSelector();renderWordList();
+    renderTagDetailModal();
+}
+function showAddWordsModal(){
+    tagModalView='addWords';
+    selectedWordIds=new Set();
+    renderAddWordsModal();
+}
+function renderAddWordsModal(){
+    const t=appData.tags.find(x=>x.id===tagModalCurrentId);
+    if(!t){openTagManager();return;}
+    const available=appData.words.filter(w=>!w.archived&&!t.wordIds.includes(w.id));
+    const listHtml=available.length?available.map(w=>`
+        <label class="add-word-checkbox" data-word-id="${escapeAttr(w.id)}" onclick="toggleAddWordSelection(event)">
+            <input type="checkbox">
+            <div style="flex:1;min-width:0;">
+                <div style="font-weight:700;font-size:0.88rem;">${escapeHtml(w.word)}</div>
+                <div style="font-size:0.72rem;color:#999;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(w.meaning)}</div>
+            </div>
+        </label>
+    `).join(''):'<div style="color:#999;text-align:center;padding:20px;font-size:0.82rem;">没有可添加的单词</div>';
+    openModal(`
+        <h2>➕ 添加到「${escapeHtml(t.name)}」</h2>
+        <div style="font-size:0.72rem;color:#999;margin-bottom:8px;">可添加 ${available.length} 个单词</div>
+        <div style="text-align:left;max-height:300px;overflow-y:auto;background:#f8f8f8;border-radius:10px;padding:8px;margin-bottom:12px;">
+            ${listHtml}
+        </div>
+        <button class="btn btn-primary" onclick="confirmAddWords()">确定添加</button>
+        <button class="btn btn-secondary" onclick="openTagDetail('${escapeAttr(t.id)}')">返回</button>
+    `);
+}
+function toggleAddWordSelection(e){
+    e.preventDefault();
+    const label=e.currentTarget;
+    const wId=label.getAttribute('data-word-id');
+    const cb=label.querySelector('input');
+    if(selectedWordIds.has(wId)){
+        selectedWordIds.delete(wId);
+        cb.checked=false;
+        label.classList.remove('checked');
+    }else{
+        selectedWordIds.add(wId);
+        cb.checked=true;
+        label.classList.add('checked');
+    }
+}
+function confirmAddWords(){
+    const t=appData.tags.find(x=>x.id===tagModalCurrentId);
+    if(!t)return;
+    if(!selectedWordIds.size){showToast('请至少选择一个单词','error');return;}
+    selectedWordIds.forEach(id=>{if(!t.wordIds.includes(id))t.wordIds.push(id);});
+    saveData();
+    renderTagFilterBar();renderReviewTagSelector();renderWordList();
+    showToast(`✅ 已添加 ${selectedWordIds.size} 个单词`,'success');
+    openTagDetail(t.id);
 }
 function deleteTagFromEvent(e){
     e.stopPropagation();
-    const id=e.currentTarget.getAttribute('data-del-tag');
-    const t=appData.tags.find(x=>x.id===id);if(!t)return;
+    const id=e.currentTarget.getAttribute('data-delete-tag');
+    const t=appData.tags.find(x=>x.id===id);
+    if(!t)return;
     if(!confirm(`确定删除标签「${t.name}」吗？单词不会被删除。`))return;
     appData.tags=appData.tags.filter(x=>x.id!==id);
     if(currentTagFilter===id)currentTagFilter=null;
     if(reviewTagId===id){reviewTagId=null;localStorage.setItem('ebbinghaus_tag_'+currentUser,'');}
-    saveData();closeModal();
+    saveData();
     renderTagFilterBar();renderReviewTagSelector();renderWordList();
+    openTagManager();
     showToast('已删除标签','info');
 }
+
 function toggleAddForm(show=null){
     const f=document.getElementById('addForm');const s=show!==null?show:!f.classList.contains('show');
     f.classList.toggle('show',s);if(s)document.getElementById('inputWord').focus();
@@ -1015,14 +1159,10 @@ function showWordDetail(id){
     const intervals=getIntervals();
     const masteredCycles=appData.settings.masteredCycles||2;
     const dotsHtml=(w.history||[]).slice(-MAX_HISTORY_DOTS).map(h=>`<span class="history-dot ${h.r==='know'?'know':'forgot'}"></span>`).join('')||'<span style="font-size:0.72rem;color:#999;">暂无记录</span>';
-    const tagCheckboxes=appData.tags.length?appData.tags.map(t=>{
-        const checked=t.wordIds.includes(w.id);
-        return`<label class="tag-checkbox-item ${checked?'checked':''}" data-tag-id="${escapeAttr(t.id)}" onclick="toggleWordTag(event)">
-            <input type="checkbox" ${checked?'checked':''}>
-            <span>${escapeHtml(t.name)}</span>
-        </label>`;
-    }).join(''):'<div style="color:#999;font-size:0.78rem;padding:8px;text-align:center;">还没有标签，点击「🏷️ 标签管理」创建</div>';
     const archiveInfo=isArchived(w)?`<div style="margin-top:6px;padding:6px 10px;background:var(--archive-light);border-radius:8px;font-size:0.72rem;color:var(--archive);">📦 已归档（${w.archivedDate||'—'}）· 不参与复习</div>`:'';
+    // 当前标签
+    const currentTags=appData.tags.filter(t=>t.wordIds.includes(w.id));
+    const tagChips=currentTags.length?currentTags.map(t=>`<span style="display:inline-block;padding:3px 9px;background:var(--primary-light);color:var(--primary);border-radius:10px;font-size:0.72rem;font-weight:600;margin:2px;">${escapeHtml(t.name)}</span>`).join(''):'<span style="font-size:0.75rem;color:#999;">未加入任何标签</span>';
     openModal(`
         <h2>📖 单词详情</h2>
         <div style="text-align:left;margin-bottom:10px;">
@@ -1045,35 +1185,14 @@ function showWordDetail(id){
                 </div>
             </div>
             <div style="margin-top:12px;">
-                <div style="font-size:0.78rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">🏷️ 加入标签</div>
-                <div class="tag-checkbox-list" id="tagCheckboxList" data-word-id="${escapeAttr(w.id)}">${tagCheckboxes}</div>
+                <div style="font-size:0.78rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">🏷️ 所属标签</div>
+                <div>${tagChips}</div>
+                <div style="font-size:0.68rem;color:#999;margin-top:6px;">如需修改标签，请到「🏷️ 标签管理」中操作</div>
             </div>
         </div>
         <button class="btn btn-primary" data-save-edit-id="${escapeAttr(w.id)}" onclick="saveWordEditFromEvent(event)">💾 保存修改</button>
         <button class="btn btn-secondary" onclick="closeModal()">取消</button>
     `);
-}
-function toggleWordTag(e){
-    e.preventDefault();e.stopPropagation();
-    const label=e.currentTarget;
-    const tagId=label.getAttribute('data-tag-id');
-    const list=document.getElementById('tagCheckboxList');
-    const wordId=list.getAttribute('data-word-id');
-    const w=appData.words.find(x=>x.id===wordId);
-    const t=appData.tags.find(x=>x.id===tagId);
-    if(!w||!t)return;
-    const checked=label.querySelector('input').checked;
-    if(checked){
-        t.wordIds=t.wordIds.filter(id=>id!==w.id);
-        label.classList.remove('checked');
-        label.querySelector('input').checked=false;
-    }else{
-        if(!t.wordIds.includes(w.id))t.wordIds.push(w.id);
-        label.classList.add('checked');
-        label.querySelector('input').checked=true;
-    }
-    saveData();
-    renderTagFilterBar();renderReviewTagSelector();renderWordList();
 }
 function saveWordEditFromEvent(e){const id=e.currentTarget.getAttribute('data-save-edit-id');if(id)saveWordEdit(id);}
 function saveWordEdit(id){
@@ -1732,6 +1851,7 @@ function undoLast(){
 }
 function markKnow(){
     if(!reviewQueue.length)return;
+    playSound('know'); // 每次点击立即播放
     takeSnapshot();
     const entry=reviewQueue[0];const word=getWordById(entry.wordId);
     if(!word){reviewQueue.shift();showCurrentWord();return;}
@@ -1763,7 +1883,7 @@ function markKnow(){
         addHistory(word,'know');advanceWord(word);
         completedWordIds.add(word.id);reviewStats.know+=1;
         todaySummary.push({word:word.word,meanings:[...word.meanings],forgotten:entry.forgot});
-        reviewQueue.shift();saveData();saveSession();playSound('know');showCurrentWord();
+        reviewQueue.shift();saveData();saveSession();showCurrentWord();
     }else{
         reviewQueue.shift();entry.activeMeanings=null;reviewQueue.push(entry);
         saveData();saveSession();showCurrentWord();
@@ -1777,6 +1897,7 @@ function markForgot(){
         const activeIdxs0=entry0.activeMeanings||word0.meanings.map((_,i)=>i);
         if(activeIdxs0.length>1)return;
     }
+    playSound('forgot'); // 每次点击立即播放
     takeSnapshot();
     const entry=reviewQueue[0];const word=getWordById(entry.wordId);
     if(!word){reviewQueue.shift();showCurrentWord();return;}
@@ -1795,7 +1916,6 @@ function markForgot(){
     if(word.stage===0&&oldStage>0)regressMsg='已重置到第 1 天，明天继续';
     else if(word.stage===oldStage)regressMsg='已在第 1 阶段，明天继续';
     else regressMsg='已回退一级，明天继续';
-    playSound('forgot');
     showToast('😕 忘记 · '+regressMsg,'info');
     reviewQueue.shift();reviewQueue.push(entry);
     saveData();saveSession();showCurrentWord();
