@@ -14,6 +14,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .header-inner{max-width:500px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
 .header-inner h1{font-size:1.2rem;font-weight:700;display:flex;align-items:center;gap:6px;}
 .header-inner h1 .logo-icon{font-size:1.5rem;}
+/* 关于按钮（标题旁） */
+.about-btn{background:rgba(255,255,255,0.2);border:none;color:white;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1rem;font-weight:700;display:flex;align-items:center;justify-content:center;transition:var(--transition);font-family:var(--font);flex-shrink:0;padding:0;margin-left:4px;}
+.about-btn:active{transform:scale(0.9);background:rgba(255,255,255,0.35);}
 .header-stats{display:flex;gap:6px;font-size:0.7rem;flex-wrap:wrap;}
 .header-stats span{display:flex;align-items:center;gap:3px;background:rgba(255,255,255,0.22);padding:3px 9px;border-radius:20px;backdrop-filter:blur(10px);font-weight:500;}
 .nav-tabs{display:flex;max-width:500px;margin:0 auto;padding:10px 12px 0;gap:4px;position:sticky;top:calc(var(--header-h) + var(--safe-top));z-index:999;background:var(--bg);}
@@ -259,7 +262,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .faq-item{margin-bottom:12px;padding:10px 12px;background:#f8f8f8;border-radius:10px;border-left:3px solid var(--primary);}
 .faq-q{font-weight:700;font-size:0.82rem;color:var(--text);margin-bottom:4px;}
 .faq-a{font-size:0.78rem;color:#666;line-height:1.6;}
-.editor-notes{background:linear-gradient(145deg,#FFF8E1,#FFECB3);padding:14px;border-radius:var(--radius-sm);border-left:4px solid #FF9800;margin-top:12px;white-space:pre-line;font-size:0.82rem;color:#6B4226;line-height:1.7;}
+/* 编者的话 - 醒目放在最上方 */
+.editor-notes-hero{background:linear-gradient(135deg,#FFF8E1 0%,#FFECB3 50%,#FFE0B2 100%);padding:16px;border-radius:var(--radius-sm);border-left:5px solid #FF9800;margin-bottom:20px;white-space:pre-line;font-size:0.85rem;color:#6B4226;line-height:1.8;text-align:left;box-shadow:0 4px 12px rgba(255,152,0,0.15);}
+.editor-notes-hero .en-title{font-size:0.9rem;font-weight:700;color:#E65100;margin-bottom:8px;display:flex;align-items:center;gap:6px;white-space:normal;}
+/* 首次阅读时的提醒 */
+.first-read-hint{text-align:center;font-size:0.72rem;color:#E65100;background:#FFF8E1;padding:8px;border-radius:8px;margin-bottom:12px;font-weight:600;white-space:normal;}
 @media (max-width:380px){.header-inner h1{font-size:1rem;}.nav-tab{font-size:0.65rem;padding:9px 2px;}.review-card .word-display{font-size:1.5rem;}.meaning-checkbox-item{padding:10px 12px;font-size:0.9rem;}.ds-word{font-size:0.85rem;}.settings-group label{font-size:0.78rem;}}
 </style>
 </head>
@@ -281,7 +288,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
 <header class="app-header">
     <div class="header-inner">
-        <h1><span class="logo-icon">📚</span> 记忆单词(浏览器使用！）</h1>
+        <h1><span class="logo-icon">📚</span> 记忆单词（浏览器使用！） <button class="about-btn" onclick="openAbout()" title="关于">ⓘ</button></h1>
         <div class="header-stats">
             <span id="headerTotalWords">📖 0</span>
             <span id="headerDueWords">⏰ 0</span>
@@ -464,7 +471,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     </div>
 
     <div class="page" id="page-settings">
-        <!-- 👤 用户区 - 最顶部，最醒目 -->
         <div class="user-hero">
             <div class="label">当前用户</div>
             <div class="name">👤 <span id="settingsUsername">-</span></div>
@@ -557,11 +563,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
             <div class="settings-group"><label>总忘记次数</label><span id="statTotalForgot">0</span></div>
             <div class="settings-group"><label>累计打卡天数</label><span id="statTotalCheckins">0</span></div>
         </div>
-        <div class="card">
-            <div class="card-title"><span class="icon">ℹ️</span> 关于</div>
-            <div style="font-size:0.82rem;color:#666;line-height:1.6;margin-bottom:10px;">了解这个工具的功能、用法和常见问题</div>
-            <button class="btn btn-primary btn-sm" style="width:100%;" onclick="openAbout()">查看「关于」</button>
-        </div>
     </div>
 </div>
 
@@ -572,12 +573,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
    📝 编者的话（EDITOR_NOTES）
    
    ⚠️ 每次更新代码时，修改下方这段文字即可。
-   在页面的「关于」页面最下方会显示出来，方便朋友看到更新内容。
+   会显示在「关于」页面最上方，方便朋友看到更新内容。
    
-   格式建议：
-   日期 · 更新内容
-   日期 · 更新内容
-   （每行一条，用换行分隔）
+   格式建议：每行一条，"日期 · 更新内容"
    ═══════════════════════════════════════════════════════════════ */
 const EDITOR_NOTES = `
 hello哇，这个网址能做到今天，本主编是从未想过的。
@@ -586,14 +584,13 @@ hello哇，这个网址能做到今天，本主编是从未想过的。
 于是，这些功能就慢慢地发芽、成长
 注意！一定要在浏览器中使用哦！
 `;
-/* ═══════════════════════════════════════════════════════════════
-   编者的话结束（下方代码不用改）
-   ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════ */
 
 const STORAGE_PREFIX='ebbinghaus_v3_';
 const USERS_LIST_KEY='ebbinghaus_users_list';
 const CURRENT_USER_KEY='ebbinghaus_current_user';
 const SESSION_KEY_PREFIX='ebbinghaus_session_';
+const INTRO_READ_SUFFIX='_introRead';
 const DEFAULT_INTERVALS=[1,2,4,7,15,30];
 const MAX_INTERVALS=12;
 const MAX_HISTORY_DOTS=12;
@@ -622,6 +619,8 @@ let todaySummary=[];
 let reviewSessionActive=false;
 let sessionStartGoal=0;
 let lastAction=null;
+
+let aboutFirstRead=false; // 是否是首次阅读（关闭时要标记已读）
 
 function genId(){return Date.now().toString()+Math.random().toString(36).slice(2,7);}
 function getDefaultData(){
@@ -699,6 +698,11 @@ function escapeAttr(str){return String(str||'').replace(/&/g,'&amp;').replace(/<
 function isMastered(w){return(w.cycleCount||0)>=(appData.settings.masteredCycles||2);}
 function isArchived(w){return!!w.archived;}
 function getStreakRequired(){return appData.settings.streakRequired||3;}
+
+/* 首次阅读标记 */
+function introReadKey(user){return STORAGE_PREFIX+user+INTRO_READ_SUFFIX;}
+function hasReadIntro(user){return !!localStorage.getItem(introReadKey(user));}
+function markIntroRead(user){localStorage.setItem(introReadKey(user),'1');}
 
 let audioCtx=null;
 function ensureAudioCtx(){
@@ -787,7 +791,19 @@ function bootstrap(){
     if(!currentUser){openUserModal();return;}
     appData=loadData(currentUser);
     resetFilterSort();renderAll();loadUserOrderPreference();updateHeaderHeight();
+    // 首次阅读检查
+    checkFirstRead();
 }
+
+/* 首次阅读检查：如果没读过关于，弹出 */
+function checkFirstRead(){
+    if(!currentUser)return;
+    if(!hasReadIntro(currentUser)){
+        aboutFirstRead=true;
+        setTimeout(()=>openAbout(),400);
+    }
+}
+
 function openUserModal(){document.getElementById('userModal').style.display='flex';renderUserList();document.getElementById('usernameInput').value='';setTimeout(()=>document.getElementById('usernameInput').focus(),100);}
 function renderUserList(){
     const list=getUsersList();const container=document.getElementById('userList');
@@ -803,16 +819,19 @@ function selectUser(name){
     localStorage.setItem(CURRENT_USER_KEY,name);currentUser=name;appData=loadData(name);
     loadUserOrderPreference();document.getElementById('userModal').style.display='none';
     renderAll();updateHeaderHeight();showToast(`欢迎回来，${name}！`,'success');
+    checkFirstRead();
 }
 function confirmUsername(){
     const name=document.getElementById('usernameInput').value.trim();
     if(!name){showToast('请输入用户名','error');return;}
-    if(!getUsersList().includes(name)){addUserToList(name);showToast(`新用户「${name}」已创建`,'success');}
+    const isNew=!getUsersList().includes(name);
+    if(isNew){addUserToList(name);showToast(`新用户「${name}」已创建`,'success');}
     else showToast(`欢迎回来，${name}！`,'success');
     resetSessionState();resetFilterSort();
     localStorage.setItem(CURRENT_USER_KEY,name);currentUser=name;appData=loadData(name);
     loadUserOrderPreference();document.getElementById('userModal').style.display='none';
     renderAll();updateHeaderHeight();
+    checkFirstRead();
 }
 document.getElementById('usernameInput').addEventListener('keydown',e=>{if(e.key==='Enter')confirmUsername();});
 function openSwitchUser(){
@@ -843,39 +862,24 @@ function confirmRename(){
     const oldSessionKey=SESSION_KEY_PREFIX+oldName;
     const newSessionKey=SESSION_KEY_PREFIX+newName;
     try{
-        // 迁移主数据
         const raw=localStorage.getItem(oldKey);
-        if(raw!==null){
-            localStorage.setItem(newKey,raw);
-            localStorage.removeItem(oldKey);
-        }
-        // 迁移会话
+        if(raw!==null){localStorage.setItem(newKey,raw);localStorage.removeItem(oldKey);}
         const rawSession=localStorage.getItem(oldSessionKey);
-        if(rawSession!==null){
-            localStorage.setItem(newSessionKey,rawSession);
-            localStorage.removeItem(oldSessionKey);
-        }
-        // 迁移顺序偏好
+        if(rawSession!==null){localStorage.setItem(newSessionKey,rawSession);localStorage.removeItem(oldSessionKey);}
         const oldOrder=localStorage.getItem('ebbinghaus_order_'+oldName);
-        if(oldOrder!==null){
-            localStorage.setItem('ebbinghaus_order_'+newName,oldOrder);
-            localStorage.removeItem('ebbinghaus_order_'+oldName);
-        }
+        if(oldOrder!==null){localStorage.setItem('ebbinghaus_order_'+newName,oldOrder);localStorage.removeItem('ebbinghaus_order_'+oldName);}
         const oldTag=localStorage.getItem('ebbinghaus_tag_'+oldName);
-        if(oldTag!==null){
-            localStorage.setItem('ebbinghaus_tag_'+newName,oldTag);
-            localStorage.removeItem('ebbinghaus_tag_'+oldName);
-        }
-        // 更新用户列表
+        if(oldTag!==null){localStorage.setItem('ebbinghaus_tag_'+newName,oldTag);localStorage.removeItem('ebbinghaus_tag_'+oldName);}
+        // 迁移首次阅读标记
+        const oldIntro=localStorage.getItem(introReadKey(oldName));
+        if(oldIntro){localStorage.setItem(introReadKey(newName),oldIntro);localStorage.removeItem(introReadKey(oldName));}
         const list=getUsersList().filter(u=>u!==oldName);
         if(!list.includes(newName))list.push(newName);
         saveUsersList(list);
-        // 更新当前用户
         localStorage.setItem(CURRENT_USER_KEY,newName);
         currentUser=newName;
         appData=loadData(newName);
-        closeModal();
-        renderAll();
+        closeModal();renderAll();
         showToast(`✅ 已改名为「${newName}」`,'success');
     }catch(e){
         console.error('改名失败',e);
@@ -889,7 +893,10 @@ function deleteCurrentUser(){
     if(input!==currentUser){showToast('用户名不匹配，已取消','error');return;}
     const bkPrefix=STORAGE_PREFIX+currentUser+'_backup_';
     const toRemove=[];
-    for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(!k)continue;if(k===STORAGE_PREFIX+currentUser||k===SESSION_KEY_PREFIX+currentUser||k.startsWith(bkPrefix)||k==='ebbinghaus_order_'+currentUser||k==='ebbinghaus_tag_'+currentUser)toRemove.push(k);}
+    for(let i=0;i<localStorage.length;i++){
+        const k=localStorage.key(i);if(!k)continue;
+        if(k===STORAGE_PREFIX+currentUser||k===SESSION_KEY_PREFIX+currentUser||k.startsWith(bkPrefix)||k==='ebbinghaus_order_'+currentUser||k==='ebbinghaus_tag_'+currentUser||k===introReadKey(currentUser))toRemove.push(k);
+    }
     toRemove.forEach(k=>localStorage.removeItem(k));
     removeUserFromList(currentUser);localStorage.removeItem(CURRENT_USER_KEY);location.reload();
 }
@@ -1640,13 +1647,25 @@ function applyImportedData(text){
     }catch(e){showToast('导入失败：'+e.message,'error');}
 }
 
-/* ===== 关于页面 ===== */
+/* ===== 关于页面（编者的话在最上方） ===== */
 function openAbout(){
     const notesHtml=EDITOR_NOTES.trim().split('\n').map(line=>escapeHtml(line)).join('<br>');
+    const firstReadHint=aboutFirstRead?'<div class="first-read-hint">🌟 首次使用，请先阅读下面的介绍，了解这个工具的用法</div>':'';
+    const closeHandler=aboutFirstRead?'closeAboutAndMarkRead()':'closeAboutNormally()';
+    const closeBtnText=aboutFirstRead?'✅ 我已阅读，开始使用':'关闭';
+
     openModal(`
         <div style="text-align:left;">
             <h2 style="text-align:center;margin-bottom:4px;">📖 关于「记忆单词」</h2>
-            <p style="text-align:center;font-size:0.72rem;color:#999;margin-bottom:18px;">v3 · 艾宾浩斯遗忘曲线背诵系统</p>
+            <p style="text-align:center;font-size:0.72rem;color:#999;margin-bottom:14px;">v3 · 艾宾浩斯遗忘曲线背诵系统</p>
+
+            ${firstReadHint}
+
+            <!-- 📝 编者的话 - 放最上方 -->
+            <div class="editor-notes-hero">
+                <div class="en-title">📝 编者的话</div>
+                ${notesHtml}
+            </div>
 
             <div class="about-section">
                 <h3>🎯 这是什么？</h3>
@@ -1660,7 +1679,7 @@ function openAbout(){
                     <li><b>单词库</b>：单个/批量添加，一个词可写多个释义（分号分隔），支持标签分类</li>
                     <li><b>智能复习</b>：基于遗忘曲线自动计算下次复习日，认识推进、忘记回退</li>
                     <li><b>自定义曲线</b>：默认 1,2,4,7,15,30 天，可自行调整</li>
-                    <li><b>多释义检验</b>：多义词逐条勾选，未勾选的会再次出现</li>
+                    <li><b>多释义检验</b>：多义词逐条勾选，未勾选的会再次出现；全忘了点"忘记"</li>
                     <li><b>助记</b>：可为每个词添加句子、谐音、词根、短语等提示</li>
                     <li><b>撤销</b>：误点"认识/忘记"可回退一步</li>
                     <li><b>音效</b>：认识/忘记有声音反馈，可关</li>
@@ -1687,11 +1706,11 @@ function openAbout(){
                 <h3>💡 助记小技巧</h3>
                 <p>助记可以是任何让你更容易记住的形式：</p>
                 <ul>
-                    <li><b>句子</b>：<code>I will abandon the plan.</code>（把这个词放进句子里）</li>
+                    <li><b>句子</b>：<code>I will abandon the plan.</code>（把词放进句子里）</li>
                     <li><b>短语</b>：<code>abandon oneself to</code>（沉湎于）</li>
                     <li><b>谐音</b>：<code>"额办等" → 我等着被抛弃</code></li>
                     <li><b>词根</b>：<code>ab-（离开）+ andon（给）→ 把东西交出去 → 放弃</code></li>
-                    <li><b>进阶</b>：<code>abandon = 放弃，比 give up 更正式；名词形式 abandonment</code></li>
+                    <li><b>进阶</b>：<code>abandon = 放弃，比 give up 更正式；名词 abandonment</code></li>
                     <li><b>联想</b>：<code>a-ban-don → 一个禁止的驴 → 被抛弃的</code></li>
                 </ul>
             </div>
@@ -1762,14 +1781,20 @@ function openAbout(){
                     <li>键盘快捷键：空格翻开卡片、<code>1</code> 认识、<code>2</code> 忘记、<code>Z</code> 撤销</li>
                 </ul>
             </div>
-
-            <div class="about-section">
-                <h3>📝 编者的话</h3>
-                <div class="editor-notes">${notesHtml}</div>
-            </div>
         </div>
-        <button class="btn btn-secondary" onclick="closeModal()" style="margin-top:16px;">关闭</button>
+        <button class="btn btn-primary" onclick="${closeHandler}" style="margin-top:16px;">${closeBtnText}</button>
     `);
+    // 打开后滚动到顶部（编者的话位置）
+    setTimeout(()=>{const box=document.getElementById('genericModalContent');if(box)box.parentElement.scrollTop=0;},50);
+}
+function closeAboutAndMarkRead(){
+    if(currentUser)markIntroRead(currentUser);
+    aboutFirstRead=false;
+    closeModal();
+    showToast('✅ 开始使用吧！','success');
+}
+function closeAboutNormally(){
+    closeModal();
 }
 
 function getWordById(id){return appData.words.find(w=>w.id===id);}
@@ -1966,7 +1991,6 @@ function updateButtons(){
         const boxes=document.getElementById('reviewMeaning').querySelectorAll('.meaning-checkbox');
         let checkedCount=0;
         boxes.forEach(cb=>{if(cb.checked)checkedCount++;});
-        // 多释义模式：忘记按钮也显示（用于"全忘记"）
         btnForgot.style.display='flex';
         btnForgot.disabled=!revealed;
         if(!revealed||checkedCount===0){
